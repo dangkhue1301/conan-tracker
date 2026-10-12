@@ -2,6 +2,8 @@
 
 Website nhỏ để Conan nhớ việc cần làm, tự ghi nhận và cùng người hướng dẫn nhìn lại sự tiến bộ. Frontend React + TypeScript + Vite; GitHub Pages phục vụ website, Supabase lưu dữ liệu và đăng nhập Google. Giao diện dựa trên [evondevKit](https://github.com/evondev/evondevKit); cách áp dụng ghi trong [docs/FRONTEND.md](docs/FRONTEND.md).
 
+Bản đã deploy: [Góc của Conan](https://dangkhue1301.github.io/conan-tracker/). Google đang ở chế độ Testing, chỉ xin quyền đăng nhập cơ bản nên không bắt buộc Test users; quyền dữ liệu do allowlist riêng của Supabase kiểm soát. Trạng thái kiểm tra thực tế ghi trong [docs/VERIFICATION.md](docs/VERIFICATION.md). Các bước thiết lập bên dưới dùng khi dựng một bản riêng từ mã nguồn này.
+
 ## Chạy thử ngay trên máy
 
 Cài Node.js 24 LTS, rồi mở terminal **trong folder `conan-tracker`**:
@@ -46,7 +48,7 @@ Không đưa `service_role`, `sb_secret_…`, mật khẩu database hoặc Googl
 
 ### 2. Bật đăng nhập Google
 
-Tạo OAuth client loại **Web application** trong Google Cloud / Google Auth Platform. Cấu hình tên app và quyền cơ bản `openid`, email, profile; nếu dùng chế độ Testing, thêm các tài khoản gia đình vào Test users.
+Tạo OAuth client loại **Web application** trong Google Cloud / Google Auth Platform. Cấu hình tên app và quyền cơ bản `openid`, email, profile. Chỉ các quyền đăng nhập cơ bản này được Google miễn yêu cầu Test users và giới hạn uỷ quyền bảy ngày khi ở chế độ Testing; xem [Manage App Audience](https://support.google.com/cloud/answer/15549945?hl=en). Nếu bổ sung quyền Google API khác, cần xem lại yêu cầu Test users và xác minh app.
 
 - **Authorized JavaScript origins:** `http://127.0.0.1:5173` và `https://TEN-GITHUB.github.io`.
 - **Authorized redirect URI:** sao chép callback hiển thị ở mục Google provider của Supabase, thường là `https://MA-DU-AN.supabase.co/auth/v1/callback`.
@@ -124,22 +126,22 @@ Các bước trên cần dự án và tài khoản thật để xác nhận. B�
 
 ## Quy tắc sử dụng và tính tiến độ
 
-| Vai | Được làm |
-| --- | --- |
-| Conan (`learner`) | Xem tiến độ/mục tiêu/lời nhắn, chọn avatar/màu, tick và sửa ghi chú trong tuần hiện tại đến hôm nay |
+| Vai                        | Được làm                                                                                                                |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Conan (`learner`)          | Xem tiến độ/mục tiêu/lời nhắn, chọn avatar/màu, tick và sửa ghi chú trong tuần hiện tại đến hôm nay                     |
 | Người hướng dẫn (`mentor`) | Xem/sửa ngày đã qua, cấu hình kế hoạch từ tương lai, cho nghỉ, tổng kết, quản lý mục tiêu/phần thưởng/ảnh, gửi lời nhắn |
-| Ba mẹ (`parent`) | Xem tiến độ/mục tiêu đang hiện, gửi ảnh và lời nhắn; gỡ lời nhắn của mình |
+| Ba mẹ (`parent`)           | Xem tiến độ/mục tiêu đang hiện, gửi ảnh và lời nhắn; gỡ lời nhắn của mình                                               |
 
 Giai đoạn 1: Anki, ngữ pháp, tính nhẩm, đọc. Giai đoạn 2 thêm viết; giai đoạn 3 thêm ôn bài. Người hướng dẫn tự quyết định ngày chuyển; app không tự mở thêm việc dựa vào điểm số.
 
-| Việc | Ít nhất | Làm đủ |
-| --- | ---: | ---: |
-| Anki | Không tách mức | 10 phút |
-| Ngữ pháp | 20 câu | 30 câu |
-| Tính nhẩm | 6 phút | 8 phút |
-| Đọc sách chữ | 4 trang | 5 trang |
-| Viết | 4 câu | 6 câu |
-| Ôn bài | 20 phút + ghi chú | 30 phút + ghi chú |
+| Việc         |           Ít nhất |            Làm đủ |
+| ------------ | ----------------: | ----------------: |
+| Anki         |    Không tách mức |           10 phút |
+| Ngữ pháp     |            20 câu |            30 câu |
+| Tính nhẩm    |            6 phút |            8 phút |
+| Đọc sách chữ |           4 trang |           5 trang |
+| Viết         |             4 câu |             6 câu |
+| Ôn bài       | 20 phút + ghi chú | 30 phút + ghi chú |
 
 Tuần tính theo giờ Việt Nam, thứ Hai–Chủ nhật. Mỗi lần làm ít nhất/làm đủ/làm thêm tính **một** lượt duy trì; làm thêm không tăng tỷ lệ trên 100%. Mẫu số là mọi lượt theo lịch **cả tuần**, từ ngày bắt đầu; ngày được nghỉ không tính. Tuần đang chạy hiển thị tiến độ tích luỹ, không xem các ngày chưa đến là bỏ sót. Giai đoạn 3 hướng tới 80%, tương đương làm tròn lên số lượt cần duy trì.
 
