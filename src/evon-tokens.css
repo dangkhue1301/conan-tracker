@@ -1,0 +1,61 @@
+/* Adapted from evondev/evondevKit, references/tokens.css (2026-10-12).
+   Copyright (c) 2026 Tuấn Trần. MIT; see THIRD_PARTY_NOTICES.md.
+   Light theme only. The app overrides font and primary colours for Conan. */
+:root {
+  color-scheme: light;
+  --background: #f4f4f6;
+  --surface: #ffffff;
+  --foreground: #2c2c2c;
+  --muted: #707070;
+  --border: #f7f7f8;
+  --border-strong: #eaeaea;
+  --surface-overlay: #ffffff;
+  --elevation-popover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --elevation-modal: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --danger: #c70036;
+  --danger-bg: rgb(255 32 86 / 0.1);
+  --error-text: #e7000b;
+  --error-bg: #fef2f2;
+  --success-bg: #ecfdf5;
+  --success: #007a55;
+  --warning-bg: #fffbeb;
+  --warning: #bb4d00;
+  --neutral-bg: #f4f4f5;
+  --neutral: #52525c;
+  --radius: 0.75rem;
+}
+* {
+  --scrollbar-thumb: transparent;
+}
+*:hover {
+  --scrollbar-thumb: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+.is-scrolling {
+  --scrollbar-thumb: color-mix(in srgb, var(--foreground) 28%, transparent);
+}
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  *:hover {
+    scrollbar-color: color-mix(in srgb, var(--foreground) 18%, transparent) transparent;
+  }
+  .is-scrolling {
+    scrollbar-color: color-mix(in srgb, var(--foreground) 28%, transparent) transparent;
+  }
+}
