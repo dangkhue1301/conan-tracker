@@ -2,7 +2,7 @@
 
 ## Đã kiểm tra trên máy
 
-- `npm test`: 41 bài kiểm tra trong 4 file. Phần giao diện chạy trong DOM cục bộ (JSDOM), phần cơ sở dữ liệu chạy migration thật trên PostgreSQL cục bộ qua PGlite.
+- `npm test`: 42 bài kiểm tra trong 4 file. Phần giao diện chạy trong DOM cục bộ (JSDOM), phần cơ sở dữ liệu chạy migration thật trên PostgreSQL cục bộ qua PGlite. Có kiểm tra quyền của helper RLS tự động do Dashboard tạo.
 - `npm run build`: TypeScript và Vite tạo bản production thành công.
 - Bản build với base path `/conan-tracker/`: kiểm tra đường dẫn JS/CSS, favicon, avatar và notice để chuẩn bị GitHub Pages.
 
@@ -17,10 +17,18 @@
 
 Auth và Storage infrastructure trong test SQL được mô phỏng để kiểm tra quyền; không thay thế việc kiểm tra hệ thống Supabase thật. DOM test xác nhận các thao tác và trạng thái, không xác nhận bố cục bằng ảnh.
 
-## Cần kiểm tra khi có tài khoản thật
+## Đã kiểm tra trên Supabase thật (12/10/2026)
 
-Google OAuth, whitelist với email thật, signed URL qua Supabase Storage, Realtime trên hai thiết bị và workflow deploy GitHub Pages chưa được chạy trên tài khoản của bạn. Quy trình kiểm tra sau thiết lập nằm trong README.
+- Dự án ở Singapore hoạt động; đã cài schema và hai thành viên vào allowlist riêng trong Supabase. Email thật không nằm trong mã nguồn.
+- Cả chín bảng bật RLS; client không có quyền ghi bảng trực tiếp. Kho `family-assets` private, giới hạn JPG/PNG/WebP và 5 MB.
+- Kiểm tra quyền bằng transaction trên database thật: người hướng dẫn thấy dữ liệu được phép, learner không thấy phần thưởng ẩn, outsider/anonymous bị chặn. Transaction đã rollback; không lưu hồ sơ hay tiến độ giả.
+- Đã thu hồi quyền chạy helper nội bộ `rls_auto_enable` khỏi các vai API. Advisor không còn cảnh báo SECURITY DEFINER dành cho anonymous. Các RPC dành cho người đã đăng nhập giữ SECURITY DEFINER có chủ đích và kiểm tra allowlist/vai trò ở server.
+- Repository GitHub đã tạo và đã cấu hình hai biến build công khai cho URL/key Supabase.
+
+## Cần kiểm tra sau cấu hình đăng nhập và deploy
+
+Google OAuth, signed URL qua Supabase Storage, Realtime trên hai thiết bị và workflow deploy GitHub Pages chưa được xác nhận trên app dùng thật. Quy trình kiểm tra sau thiết lập nằm trong README.
 
 Công cụ trình duyệt của phiên làm việc từ chối mở localhost theo chính sách công cụ. Vì vậy chưa xác nhận giao diện bằng ảnh chụp trên laptop/điện thoại hoặc thao tác trong trình duyệt thật. CSS đã có bố cục responsive; cần xem lại trực tiếp sau khi chạy `npm run dev` trước khi sử dụng hằng ngày.
 
-Không có dự án Supabase/repository thật trong lần bàn giao này, nên không có URL public đã triển khai. Mã nguồn, migration, template whitelist và workflow đã được chuẩn bị để bạn thiết lập.
+Website chưa được công bố trong bước kiểm tra này; cấu hình Google OAuth đang được hoàn tất trước khi deploy.

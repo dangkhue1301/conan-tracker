@@ -35,7 +35,7 @@ const save = (date = day, habit = 'grammar', status = 'done', note = '', version
 beforeAll(async () => {
   db = new PGlite()
   await db.exec(`
-    create role anon nologin; create role authenticated nologin;
+    create role anon nologin; create role authenticated nologin; create role service_role nologin;
     create schema auth; create schema storage;
     create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
     create function auth.uid() returns uuid language sql stable as $$ select (auth.jwt()->>'sub')::uuid $$;
@@ -46,6 +46,7 @@ beforeAll(async () => {
     grant usage on schema public,auth,storage to anon,authenticated;
     grant execute on all functions in schema auth,storage to anon,authenticated;
     grant select,insert,delete on storage.objects to authenticated;
+    create function public.rls_auto_enable() returns void language plpgsql security definer set search_path = '' as $$ begin null; end; $$;
   `)
   await db.exec(
     await readFile(new URL('../supabase/migrations/001_tracker.sql', import.meta.url), 'utf8'),
@@ -83,6 +84,18 @@ describe('database authorization and data integrity', () => {
     await expect(snapshot()).rejects.toThrow('chưa được phép')
     await db.exec('reset role; set role anon;')
     await expect(snapshot()).rejects.toThrow('permission denied')
+  })
+  it('keeps the Dashboard automatic-RLS helper unavailable to API roles', async () => {
+    const rows = (
+      await db.query(
+        "select role_name, has_function_privilege(role_name, 'public.rls_auto_enable()', 'EXECUTE') as can_execute from unnest(array['anon','authenticated','service_role']) as role_name",
+      )
+    ).rows
+    expect(rows).toEqual([
+      { role_name: 'anon', can_execute: false },
+      { role_name: 'authenticated', can_execute: false },
+      { role_name: 'service_role', can_execute: false },
+    ])
   })
   it('does not expose the other family members in the allowlist', async () => {
     await login('learner')

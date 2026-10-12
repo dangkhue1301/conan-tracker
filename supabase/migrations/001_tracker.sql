@@ -209,6 +209,14 @@ do $$ declare f record; begin
   end loop;
 end; $$;
 
+-- Dashboard's optional automatic-RLS event trigger is internal, never a client RPC.
+do $$ declare f regprocedure; begin
+  f := to_regprocedure('public.rls_auto_enable()');
+  if f is not null then
+    execute format('revoke all on function %s from public, anon, authenticated, service_role',f);
+  end if;
+end; $$;
+
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('family-assets','family-assets',false,5242880,array['image/jpeg','image/png','image/webp'])
   on conflict(id) do update set public=false,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
 drop policy if exists family_asset_read on storage.objects;
