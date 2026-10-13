@@ -1,5 +1,5 @@
 export type Role = 'learner' | 'mentor' | 'parent'
-export type HabitId = 'anki' | 'grammar' | 'mental' | 'review' | 'reading' | 'writing'
+export type HabitId = 'anki' | 'grammar' | 'mental' | 'review' | 'reading' | 'writing' | 'tidy'
 export type CheckinStatus = 'not_started' | 'minimum' | 'done' | 'extra'
 export type AvatarId = 'detective' | 'football' | 'builder'
 export type Accent = 'teal' | 'blue' | 'violet' | 'orange'

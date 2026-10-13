@@ -117,3 +117,24 @@ it('upgrades a stored four-habit schedule from today without changing old checks
   expect(upgraded.checkins).toEqual(data.checkins)
   expect((await repo('mentor').load()).plans).toEqual(upgraded.plans)
 })
+it('adds desk tidying to stored current and future plans while preserving six-habit history', async () => {
+  const mentor = repo('mentor')
+  const data = await mentor.load()
+  data.plans = data.plans.filter((p) => p.id !== 'demo-plan-tidy')
+  const old = planForDate(data.plans, '2026-10-13')!
+  old.habits[0].url = 'https://example.com/custom-anki'
+  data.plans.push({
+    ...structuredClone(old),
+    id: 'future-six',
+    effectiveFrom: '2026-10-20',
+    revision: 4,
+  })
+  values.set('conan-tracker-demo-v1', JSON.stringify(data))
+  const upgraded = await mentor.load()
+  expect(planForDate(upgraded.plans, '2026-10-13')!.habits).toHaveLength(6)
+  expect(planForDate(upgraded.plans, '2026-10-14')!.habits).toHaveLength(7)
+  expect(planForDate(upgraded.plans, '2026-10-14')!.habits[0].url).toBe(old.habits[0].url)
+  expect(upgraded.plans.find((p) => p.id === 'future-six')).toMatchObject({ revision: 5 })
+  expect(upgraded.checkins).toEqual(data.checkins)
+  expect((await mentor.load()).plans).toEqual(upgraded.plans)
+})

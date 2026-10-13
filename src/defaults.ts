@@ -1,7 +1,15 @@
 import type { Habit, HabitId, Profile } from './types'
 import { today } from './domain'
 
-export const HABIT_IDS: HabitId[] = ['anki', 'grammar', 'mental', 'review', 'reading', 'writing']
+export const HABIT_IDS: HabitId[] = [
+  'anki',
+  'grammar',
+  'mental',
+  'review',
+  'reading',
+  'writing',
+  'tidy',
+]
 const schedule = (time: string) =>
   Object.fromEntries(
     Array.from({ length: 7 }, (_, i) => [String(i + 1), { time: i < 5 ? time : '', subject: '' }]),
@@ -80,7 +88,23 @@ export function defaultHabits(): Habit[] {
       period: 'evening',
       schedule: writingSchedule,
     },
+    {
+      id: 'tidy',
+      title: 'Dọn bàn học và sách vở',
+      minimum: null,
+      target: 5,
+      unit: 'phút',
+      url: '',
+      period: 'evening',
+      schedule: schedule(''),
+    },
   ]
+}
+export function withTidyHabit(habits: Habit[]): Habit[] {
+  const result = structuredClone(habits)
+  if (!result.some((h) => h.id === 'tidy'))
+    result.push(defaultHabits().find((h) => h.id === 'tidy')!)
+  return result
 }
 export const defaultProfile = (): Profile => ({
   name: 'Conan',

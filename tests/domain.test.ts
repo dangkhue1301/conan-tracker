@@ -15,11 +15,13 @@ import { defaultHabits } from '../src/defaults'
 import { demoSnapshot } from '../src/repository'
 import type { Plan, Snapshot } from '../src/types'
 
+const legacyHabits = () => defaultHabits().filter((h) => h.id !== 'tidy')
+
 function fixture(): Snapshot {
   const data = demoSnapshot('learner', '2026-10-14')
   data.profile!.startedOn = '2026-10-12'
   data.plans = [
-    { id: 'p1', effectiveFrom: '2026-10-12', phase: 1, revision: 1, habits: defaultHabits() },
+    { id: 'p1', effectiveFrom: '2026-10-12', phase: 1, revision: 1, habits: legacyHabits() },
   ]
   data.checkins = []
   data.excuses = []
@@ -48,9 +50,9 @@ describe('Vietnamese calendar and edit window', () => {
 describe('versioned requirements and honest progress', () => {
   it('adds writing and review only from their plan effective dates', () => {
     const plans: Plan[] = [
-      { id: 'p3', effectiveFrom: '2026-10-20', phase: 3, revision: 1, habits: defaultHabits() },
-      { id: 'p1', effectiveFrom: '2026-10-12', phase: 1, revision: 1, habits: defaultHabits() },
-      { id: 'p2', effectiveFrom: '2026-10-16', phase: 2, revision: 1, habits: defaultHabits() },
+      { id: 'p3', effectiveFrom: '2026-10-20', phase: 3, revision: 1, habits: legacyHabits() },
+      { id: 'p1', effectiveFrom: '2026-10-12', phase: 1, revision: 1, habits: legacyHabits() },
+      { id: 'p2', effectiveFrom: '2026-10-16', phase: 2, revision: 1, habits: legacyHabits() },
     ]
     expect(activeHabits(planForDate(plans, '2026-10-15'))).toHaveLength(4)
     expect(activeHabits(planForDate(plans, '2026-10-16'))).toHaveLength(5)
@@ -125,7 +127,7 @@ describe('versioned requirements and honest progress', () => {
   })
   it('preserves old thresholds and calculates mixed-phase weeks per day', () => {
     const data = fixture(),
-      newHabits = defaultHabits()
+      newHabits = legacyHabits()
     newHabits[0].target = 12
     data.plans.push({
       id: 'p2',
@@ -176,6 +178,27 @@ describe('configuration constraints', () => {
     habits[0].schedule['7'].time = '25:00'
     expect(validateHabits(habits)).toContain('giờ')
     habits[0] = structuredClone(habits[1])
-    expect(validateHabits(habits)).toContain('sáu')
+    expect(validateHabits(habits)).toContain('bảy')
+  })
+})
+
+it('counts desk tidying only after its effective date and gives it one five-minute target', () => {
+  const data = fixture()
+  data.plans[0].phase = 3
+  data.plans.push({
+    id: 'p7',
+    effectiveFrom: '2026-10-14',
+    phase: 3,
+    revision: 1,
+    habits: defaultHabits(),
+  })
+  expect(activeHabits(planForDate(data.plans, '2026-10-13'))).toHaveLength(6)
+  expect(activeHabits(planForDate(data.plans, '2026-10-14'))).toHaveLength(7)
+  const tidy = defaultHabits().find((h) => h.id === 'tidy')!
+  expect(tidy).toMatchObject({ target: 5, minimum: null, unit: 'phút' })
+  expect(hasMinimum(tidy)).toBe(false)
+  expect(weeklyStats(data, '2026-10-12', '2026-10-14')).toMatchObject({
+    planned: 47,
+    perHabit: { tidy: { planned: 5, credited: 0, missed: 0 } },
   })
 })

@@ -162,10 +162,11 @@ describe('working app flows in a local DOM', () => {
   })
 })
 
-it('puts all six tasks and adult messages on the homepage', async () => {
+it('puts all seven tasks and adult messages on the homepage', async () => {
   await open('parent')
-  expect(screen.getAllByRole('checkbox')).toHaveLength(6)
+  expect(screen.getAllByRole('checkbox')).toHaveLength(7)
   expect(tick(/Tập viết tiếng Việt/)).toBeTruthy()
+  expect(tick(/Dọn bàn học và sách vở/)).toBeTruthy()
   fireEvent.click(screen.getByRole('button', { name: 'Viết lời nhắn' }))
   fireEvent.change(screen.getByRole('textbox', { name: 'Một lời gửi em' }), {
     target: { value: 'Ba thấy con đã cố gắng hôm nay.' },
@@ -173,6 +174,34 @@ it('puts all six tasks and adult messages on the homepage', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Gửi lời nhắn' }))
   await screen.findByText('Ba thấy con đã cố gắng hôm nay.')
   expect(screen.getByRole('heading', { name: 'Hôm nay' })).toBeTruthy()
+})
+it('keeps a desk-tidying tick after reopening and shows it in the weekly table', async () => {
+  const app = await open()
+  fireEvent.click(tick(/^Dọn bàn học và sách vở:/))
+  await waitFor(() =>
+    expect(tick(/^Dọn bàn học và sách vở:/).getAttribute('aria-checked')).toBe('true'),
+  )
+  app.unmount()
+  await open()
+  expect(tick(/^Dọn bàn học và sách vở:/).getAttribute('aria-checked')).toBe('true')
+  fireEvent.click(screen.getByRole('button', { name: 'Tiến độ' }))
+  expect(
+    await screen.findByRole('button', { name: /^Dọn bàn học và sách vở, .*Làm đủ$/ }),
+  ).toBeTruthy()
+})
+it('includes desk tidying when a mentor copies a legacy six-habit schedule', async () => {
+  await open('mentor')
+  fireEvent.click(screen.getByRole('button', { name: 'Quản lý' }))
+  fireEvent.change(screen.getByRole('combobox', { name: 'Sao chép cấu hình từ' }), {
+    target: { value: 'demo-plan-1' },
+  })
+  expect(screen.getByText('Dọn bàn học và sách vở')).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: 'Lưu kế hoạch' }))
+  await screen.findByText('Đã lưu kế hoạch áp dụng từ 15/10.')
+  const data = JSON.parse(localStorage.getItem('conan-tracker-demo-v1')!)
+  expect(
+    data.plans.find((p: { effectiveFrom: string }) => p.effectiveFrom === '2026-10-15').habits,
+  ).toHaveLength(7)
 })
 it('keeps one status menu open, closes outside and on Escape, and records a minimum', async () => {
   await open()

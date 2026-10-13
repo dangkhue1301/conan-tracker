@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Check, ChevronDown, Coffee, Settings2, ShieldCheck, Trophy } from 'lucide-react'
-import { addDays, planForDate, shortDate, validateHabits } from '../domain'
+import { activeHabits, addDays, planForDate, shortDate, validateHabits } from '../domain'
+import { withTidyHabit } from '../defaults'
 import { habitTitle } from '../domain'
 import type { Habit, Repository, Reward, Snapshot } from '../types'
 import type { Run } from '../App'
@@ -24,7 +25,7 @@ function ManageForm({
   const [mode, setMode] = useState<'create' | 'edit'>('create')
   const [sourceId, setSourceId] = useState(currentPlan.id)
   const [habits, setHabits] = useState<Habit[]>(
-    structuredClone(currentPlan.habits).map((h) => ({ ...h, title: habitTitle(h) })),
+    withTidyHabit(currentPlan.habits).map((h) => ({ ...h, title: habitTitle(h) })),
   )
   const [revision, setRevision] = useState(currentPlan.revision)
   const [effectiveFrom, setEffectiveFrom] = useState(addDays(currentDate, 1)),
@@ -35,7 +36,7 @@ function ManageForm({
     const p = data.plans.find((item) => item.id === id)
     if (!p) return
     setSourceId(p.id)
-    setHabits(structuredClone(p.habits).map((h) => ({ ...h, title: habitTitle(h) })))
+    setHabits(withTidyHabit(p.habits).map((h) => ({ ...h, title: habitTitle(h) })))
     setRevision(p.revision)
     setEffectiveFrom(nextMode === 'edit' ? p.effectiveFrom : addDays(currentDate, 1))
     setFormError('')
@@ -87,7 +88,7 @@ function ManageForm({
         <div className="card-topline">
           <div>
             <h2>Lịch và yêu cầu</h2>
-            <p className="muted">Hiện tại: 6 việc học mỗi ngày</p>
+            <p className="muted">Hiện tại: {activeHabits(currentPlan).length} việc mỗi ngày</p>
           </div>
           <label className="compact-label">
             {mode === 'create' ? 'Sao chép cấu hình từ' : 'Lịch sắp áp dụng'}
@@ -300,8 +301,8 @@ function ManageForm({
       {confirm && (
         <Modal title="Lưu thay đổi lịch sắp áp dụng?" onClose={() => setConfirm(false)}>
           <p>
-            Cập nhật sáu việc học của lịch ngày {shortDate(effectiveFrom)}. Các ngày đã qua giữ
-            nguyên.
+            Cập nhật {habits.length} việc của lịch ngày {shortDate(effectiveFrom)}. Các ngày đã qua
+            giữ nguyên.
           </p>
           <div className="modal-actions">
             <Button className="secondary" onClick={() => setConfirm(false)}>

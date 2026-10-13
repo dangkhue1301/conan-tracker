@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
 import { readFile, readdir } from 'node:fs/promises'
 import { defaultHabits, defaultProfile } from '../src/defaults'
+import { weeklyStats } from '../src/domain'
 import type { Role, Snapshot } from '../src/types'
 
 // Real PostgreSQL engine. Only Supabase's auth/storage infrastructure is stubbed.
@@ -9,6 +10,7 @@ import type { Role, Snapshot } from '../src/types'
 let db: PGlite
 const day = '2026-10-14'
 let upgrade: string
+let tidyUpgrade: string
 const ids = {
   mentor: '00000000-0000-4000-8000-000000000001',
   learner: '00000000-0000-4000-8000-000000000002',
@@ -60,6 +62,14 @@ beforeAll(async () => {
     'utf8',
   )
   await db.exec(upgrade)
+  const tidyMigration = (await readdir(new URL('../supabase/migrations/', import.meta.url))).find(
+    (n) => n.endsWith('_add_desk_tidy_habit.sql'),
+  )!
+  tidyUpgrade = await readFile(
+    new URL(`../supabase/migrations/${tidyMigration}`, import.meta.url),
+    'utf8',
+  )
+  await db.exec(tidyUpgrade)
   await db.exec(
     `create or replace function public.app_today() returns date language sql stable set search_path=public,pg_temp as $$ select date '${day}' $$;`,
   )
@@ -78,11 +88,12 @@ afterAll(async () => {
 })
 
 describe('database authorization and data integrity', () => {
-  it('starts all six habits without fabricated personal history or messages', async () => {
+  it('starts all seven habits without fabricated personal history or messages', async () => {
     const data = await snapshot()
     expect(data.actor.role).toBe('mentor')
     expect(data.plans[0].phase).toBe(3)
     expect(data.plans[0].revision).toBe(1)
+    expect(data.plans[0].habits).toHaveLength(7)
     expect(data.checkins).toEqual([])
     expect(data.messages).toEqual([])
     expect(data.rewards).toEqual([])
@@ -375,5 +386,76 @@ describe('six-habit rollout and schedule revisions', () => {
     await db.exec(upgrade)
     await login('mentor')
     expect((await snapshot()).plans).toEqual(data.plans)
+  })
+})
+
+describe('desk-tidying rollout', () => {
+  it('adds the habit from today, preserves earlier checks and custom future requirements, and is idempotent', async () => {
+    await save('2026-10-12')
+    const checks = (await snapshot()).checkins
+    const legacy = defaultHabits().filter((h) => h.id !== 'tidy')
+    legacy[0].url = 'https://example.com/custom-anki'
+    await db.exec('reset role;')
+    await db.query('update plan_versions set habits=$1::jsonb', [legacy])
+    await db.query(
+      'insert into plan_versions(effective_from,phase,habits) values($1::date,3,$2::jsonb)',
+      ['2026-10-20', legacy],
+    )
+    await db.exec(tidyUpgrade)
+    await login('mentor')
+    const data = await snapshot()
+    expect(data.plans.map((p) => [p.effectiveFrom, p.habits.length])).toEqual([
+      ['2026-09-21', 6],
+      [day, 7],
+      ['2026-10-20', 7],
+    ])
+    expect(data.plans[1].habits.find((h) => h.id === 'tidy')).toMatchObject({
+      target: 5,
+      minimum: null,
+      unit: 'phút',
+    })
+    expect(data.plans[2].habits[0].url).toBe(legacy[0].url)
+    expect(data.checkins).toEqual(checks)
+    expect(weeklyStats(data, '2026-10-12', day).planned).toBe(47)
+    await db.exec('reset role;')
+    await db.exec(tidyUpgrade)
+    await login('mentor')
+    expect((await snapshot()).plans).toEqual(data.plans)
+    await expect(save('2026-10-13', 'tidy')).rejects.toThrow('chưa được bật')
+    await login('learner')
+    await save(day, 'tidy')
+    expect((await snapshot()).checkins.find((c) => c.habitId === 'tidy')).toMatchObject({
+      status: 'done',
+      note: '',
+    })
+  })
+  it('extends a plan already starting today in place without changing its check-ins', async () => {
+    await save()
+    const before = await snapshot()
+    const old = before.plans[0]
+    await db.exec('reset role;')
+    await db.query('update plan_versions set effective_from=$1::date,habits=$2::jsonb', [
+      day,
+      old.habits.filter((h) => h.id !== 'tidy'),
+    ])
+    await db.exec(tidyUpgrade)
+    await login('mentor')
+    const after = await snapshot()
+    expect(after.plans).toHaveLength(1)
+    expect(after.plans[0]).toMatchObject({ id: old.id, revision: 2 })
+    expect(after.plans[0].habits).toHaveLength(7)
+    expect(after.checkins).toEqual(before.checkins)
+  })
+  it('does not let a parent tick the new task or an older client save a six-habit schedule', async () => {
+    await login('parent')
+    await expect(save(day, 'tidy')).rejects.toThrow('chưa được phép')
+    await login('mentor')
+    await expect(save(day, 'tidy', 'minimum')).rejects.toThrow('chỉ có mức làm đủ')
+    await expect(
+      db.query('select save_plan_v2($1::date,null,null,$2::jsonb)', [
+        '2026-10-15',
+        defaultHabits().filter((h) => h.id !== 'tidy'),
+      ]),
+    ).rejects.toThrow('bảy')
   })
 })

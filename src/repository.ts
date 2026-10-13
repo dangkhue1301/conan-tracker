@@ -9,7 +9,7 @@ import {
   validateHabits,
   weekStart,
 } from './domain'
-import { defaultHabits, defaultProfile } from './defaults'
+import { defaultHabits, defaultProfile, withTidyHabit } from './defaults'
 import type {
   Actor,
   Accent,
@@ -40,7 +40,7 @@ export const client = isConfigured
 
 export function demoSnapshot(role: Role = 'learner', date = today()): Snapshot {
   const startedOn = addDays(weekStart(date), -21)
-  const habits = defaultHabits()
+  const habits = defaultHabits().filter((h) => h.id !== 'tidy')
   const plans: Plan[] = [
     { id: 'demo-plan-1', effectiveFrom: startedOn, phase: 1, revision: 1, habits },
     {
@@ -84,6 +84,13 @@ export function demoSnapshot(role: Role = 'learner', date = today()): Snapshot {
       })
     }
   }
+  plans.push({
+    id: 'demo-plan-tidy',
+    effectiveFrom: date,
+    phase: 3,
+    revision: 1,
+    habits: withTidyHabit(habits),
+  })
   return {
     actor: demoActor(role),
     profile: { ...defaultProfile(), startedOn },
@@ -150,9 +157,10 @@ export class DemoRepository implements Repository {
       const date = this.clock(),
         current = planForDate(value.plans, date)
       let changed = false
-      if (current && current.phase !== 3) {
+      if (current && (current.phase !== 3 || !current.habits.some((h) => h.id === 'tidy'))) {
         if (current.effectiveFrom === date) {
           current.phase = 3
+          current.habits = withTidyHabit(current.habits)
           current.revision++
         } else
           value.plans.push({
@@ -161,12 +169,17 @@ export class DemoRepository implements Repository {
             effectiveFrom: date,
             phase: 3,
             revision: 1,
+            habits: withTidyHabit(current.habits),
           })
         changed = true
       }
       for (const plan of value.plans)
-        if (plan.effectiveFrom > date && plan.phase !== 3) {
+        if (
+          plan.effectiveFrom > date &&
+          (plan.phase !== 3 || !plan.habits.some((h) => h.id === 'tidy'))
+        ) {
           plan.phase = 3
+          plan.habits = withTidyHabit(plan.habits)
           plan.revision++
           changed = true
         }

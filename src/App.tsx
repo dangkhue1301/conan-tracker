@@ -536,7 +536,7 @@ function InitialSetup({
             await run(() => repo.initialize(profile, defaultHabits()), 'Đã mở góc học tập.')
           }}
         >
-          <p>Bắt đầu với sáu việc nhỏ. Bạn có thể chỉnh mốc, giờ và thêm URL ở phần quản lý.</p>
+          <p>Bắt đầu với bảy việc nhỏ. Bạn có thể chỉnh mốc, giờ và thêm URL ở phần quản lý.</p>
           <label>
             Tên gọi
             <input

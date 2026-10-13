@@ -13,7 +13,7 @@ npm ci
 npm run dev
 ```
 
-Mở [bản minh hoạ](http://127.0.0.1:5173/?demo=1). Không cần tài khoản Supabase. Thanh đầu trang cho đổi vai Conan / người hướng dẫn / ba mẹ để kiểm tra từng màn. Dữ liệu mẫu chỉ lưu trong trình duyệt của máy đó, không đồng bộ sang hệ thống thật. Bản mẫu và bản thật đều có đủ sáu việc, gồm Ôn bài đã học và Tập viết tiếng Việt.
+Mở [bản minh hoạ](http://127.0.0.1:5173/?demo=1). Không cần tài khoản Supabase. Thanh đầu trang cho đổi vai Conan / người hướng dẫn / ba mẹ để kiểm tra từng màn. Dữ liệu mẫu chỉ lưu trong trình duyệt của máy đó, không đồng bộ sang hệ thống thật. Bản mẫu và bản thật đều có đủ bảy việc, gồm Ôn bài đã học, Tập viết tiếng Việt và Dọn bàn học và sách vở.
 
 Đóng terminal hoặc nhấn `Ctrl+C` để dừng. Đây là app cần chạy bằng server; không mở `index.html` trực tiếp bằng cách nhấp đôi.
 
@@ -40,7 +40,7 @@ Bạn cần tạo một dự án Supabase và một repository GitHub mới. Kh�
 ### 1. Tạo Supabase và cơ sở dữ liệu
 
 1. Tạo dự án riêng tại [Supabase](https://supabase.com/dashboard). Giữ mật khẩu database ở tài khoản của bạn.
-2. Mở **SQL Editor**, tạo query mới, dán và chạy toàn bộ [supabase/migrations/001_tracker.sql](supabase/migrations/001_tracker.sql). Sau đó chạy tiếp `supabase/migrations/20261013101424_six_habits_and_plan_revisions.sql`. Hai migration tạo bảng, quyền truy cập, lịch đủ sáu việc, các hàm lưu, kho ảnh riêng và Realtime; chưa có dữ liệu cá nhân hay lịch sử giả.
+2. Mở **SQL Editor**, tạo query mới, dán và chạy toàn bộ [supabase/migrations/001_tracker.sql](supabase/migrations/001_tracker.sql). Sau đó lần lượt chạy `supabase/migrations/20261013101424_six_habits_and_plan_revisions.sql` và `supabase/migrations/20261013162134_add_desk_tidy_habit.sql`. Ba migration tạo bảng, quyền truy cập, lịch đủ bảy việc, các hàm lưu, kho ảnh riêng và Realtime; chưa có dữ liệu cá nhân hay lịch sử giả.
 3. Mở [supabase/allowlist.example.sql](supabase/allowlist.example.sql), thay **toàn bộ** email ví dụ bằng email Google thật của người hướng dẫn, Conan, ba và mẹ. Chạy bản đã sửa trong SQL Editor. Không đưa bản chứa email thật lên GitHub.
 4. Trong cài đặt API của dự án, lấy **Project URL** và **publishable key** (`sb_publishable_…`). Dự án cũ có thể dùng legacy `anon` key. Hai giá trị này dùng cho frontend; quyền truy cập thực sự do RLS và các hàm có kiểm tra vai thực thi. Xem [hướng dẫn API keys](https://supabase.com/docs/guides/api/api-keys).
 
@@ -83,7 +83,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_THAY_BANG_KEY_CUA_BAN
 VITE_BASE_PATH=/
 ```
 
-Chạy lại `npm run dev`, mở `http://127.0.0.1:5173/` **không có `?demo=1`**. Người hướng dẫn đăng nhập đầu tiên, nhập tên gọi và ngày bắt đầu. App tạo lịch đủ sáu việc; dữ liệu mẫu không chuyển sang dùng thật.
+Chạy lại `npm run dev`, mở `http://127.0.0.1:5173/` **không có `?demo=1`**. Người hướng dẫn đăng nhập đầu tiên, nhập tên gọi và ngày bắt đầu. App tạo lịch đủ bảy việc; dữ liệu mẫu không chuyển sang dùng thật.
 
 Mở **Quản lý** để điền URL Anki/ngữ pháp/tính nhẩm và chỉnh giờ nếu cần. Thay đổi lịch bắt đầu từ ngày mai hoặc ngày tương lai bạn chọn, để yêu cầu cũ được giữ đúng khi xem lại lịch sử.
 
@@ -132,7 +132,7 @@ Các bước trên cần dự án và tài khoản thật để xác nhận. B�
 | Người hướng dẫn (`mentor`) | Xem/sửa ngày đã qua, cấu hình kế hoạch từ tương lai, cho nghỉ, tổng kết, quản lý mục tiêu/phần thưởng/ảnh, gửi lời nhắn |
 | Ba mẹ (`parent`)           | Xem tiến độ/mục tiêu đang hiện, gửi ảnh và lời nhắn; gỡ lời nhắn của mình                                               |
 
-Mỗi ngày có sáu việc: Anki, ngữ pháp, tính nhẩm, Ôn bài đã học, đọc sách chữ và Tập viết tiếng Việt. Giai đoạn 1/2 chỉ được giữ để đọc lịch sử của bản cũ; từ ngày nâng cấp luôn áp dụng đủ sáu việc.
+Mỗi ngày có bảy việc: Anki, ngữ pháp, tính nhẩm, Ôn bài đã học, đọc sách chữ, Tập viết tiếng Việt và Dọn bàn học và sách vở. Giai đoạn 1/2 và các lịch sáu việc được giữ để đọc đúng lịch sử; việc dọn bàn chỉ tính từ ngày nâng cấp.
 
 | Việc         |           Ít nhất |            Làm đủ |
 | ------------ | ----------------: | ----------------: |
@@ -142,6 +142,7 @@ Mỗi ngày có sáu việc: Anki, ngữ pháp, tính nhẩm, Ôn bài đã họ
 | Đọc sách chữ |           4 trang |           5 trang |
 | Viết         |             4 câu |             6 câu |
 | Ôn bài       | 20 phút + ghi chú | 30 phút + ghi chú |
+| Dọn bàn học và sách vở | Không tách mức | 5 phút |
 
 Tuần tính theo giờ Việt Nam, thứ Hai–Chủ nhật. Mỗi lần làm ít nhất/làm đủ/làm thêm tính **một** lượt duy trì; làm thêm không tăng tỷ lệ trên 100%. Mẫu số là mọi lượt theo lịch **cả tuần**, từ ngày bắt đầu; ngày được nghỉ không tính. Tuần đang chạy hiển thị tiến độ tích luỹ, không xem các ngày chưa đến là bỏ sót. Mốc tham khảo là 80%, tương đương làm tròn lên số lượt cần duy trì.
 
@@ -171,5 +172,7 @@ Sau khi chỉnh mã, dùng `npm run format` để định dạng và `npm test` 
 ## Nâng cấp bản đã có dữ liệu
 
 Sau `001_tracker.sql`, chạy migration bổ sung `supabase/migrations/20261013101424_six_habits_and_plan_revisions.sql` trước khi phát hành frontend mới. Migration bật đủ sáu việc từ ngày chạy theo giờ Việt Nam, cập nhật các lịch đã đặt cho tương lai và giữ nguyên lịch sử cùng các lượt ghi nhận. Có thể chạy lại mà không tạo thêm lịch hoặc tăng phiên bản vô cớ.
+
+Chạy tiếp `supabase/migrations/20261013162134_add_desk_tidy_habit.sql` để thêm Dọn bàn học và sách vở, 5 phút mỗi ngày, chưa đặt giờ cố định. Migration áp dụng từ ngày chạy theo giờ Việt Nam, bổ sung vào lịch tương lai và giữ lịch cũ cùng các lượt tick. Chạy lại không thêm trùng việc hoặc tăng phiên bản. Khi sao chép một lịch cũ trong Quản lý, app bổ sung việc dọn bàn vào lịch mới.
 
 Lịch mới không ghi đè lịch trùng ngày. Muốn chỉnh lịch tương lai, chọn “Sửa lịch sắp áp dụng”; lịch đã có hiệu lực chỉ được sao chép. Khách cũ gọi `save_plan` sẽ được yêu cầu tải lại trang; frontend mới dùng `save_plan_v2` với phiên bản dự kiến.

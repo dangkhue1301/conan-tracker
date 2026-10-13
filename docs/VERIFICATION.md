@@ -2,7 +2,7 @@
 
 ## Đã kiểm tra trên máy
 
-- `npm test`: 53 bài kiểm tra trong 5 file. Phần giao diện chạy trong DOM cục bộ (JSDOM), phần cơ sở dữ liệu chạy migration thật trên PostgreSQL cục bộ qua PGlite. Có kiểm tra quyền của helper RLS tự động do Dashboard tạo.
+- `npm test`: 60 bài kiểm tra trong 5 file. Phần giao diện chạy trong DOM cục bộ (JSDOM), phần cơ sở dữ liệu chạy migration thật trên PostgreSQL cục bộ qua PGlite. Có kiểm tra quyền của helper RLS tự động do Dashboard tạo.
 - `npm run build`: TypeScript và Vite tạo bản production thành công.
 - Bản build với base path `/conan-tracker/`: kiểm tra đường dẫn JS/CSS, favicon, avatar và notice để chuẩn bị GitHub Pages.
 
@@ -57,3 +57,11 @@ Công cụ trình duyệt từ chối mở localhost theo chính sách công c�
 - Menu của dòng cuối mở lên trên khi thiếu chỗ phía dưới; đã kiểm tra nằm trong viewport và trong vùng nội dung modal. Escape đóng menu. Tiêu đề modal và nút đóng cùng hàng, chỉ nội dung cuộn; nhóm nút cuối có khoảng cách 12px.
 - Kiểm tra thêm cửa sổ chỉnh mục tiêu và avatar trên màn hẹp; nút xoá mốc có cột riêng rộng 44px và không chồng lên ngày. Các nút và input dùng chung được thống nhất chiều cao tối thiểu 44px.
 - 53 bài kiểm thử hiện có, TypeScript, format và build đã qua. Kết quả đo bố cục được kiểm tra riêng trong trình duyệt; các ảnh xác nhận được lưu cục bộ, không đưa lên repository.
+
+## Thêm việc dọn bàn học (13/10/2026)
+
+- Việc thứ bảy: Dọn bàn học và sách vở, làm đủ 5 phút, không có mức ít nhất hoặc giờ cố định. Có trong checklist, bảng tuần và màn Quản lý.
+- Kiểm thử việc tick, mở lại và xem trên bảng tuần; sao chép lịch sáu việc tự bổ sung việc mới.
+- Kiểm thử migration trên PostgreSQL: giữ lịch sử sáu việc, giữ lượt tick và URL đã chỉnh, cập nhật lịch tương lai, chạy lại không tạo trùng; lịch đang bắt đầu hôm nay được mở rộng mà không đổi ID hay các lượt tick.
+- Mẫu số tuần chỉ bổ sung việc dọn bàn từ ngày có hiệu lực; không tính các ngày trước đó là thiếu việc. Quyền của ba mẹ và điều kiện ghi chú ôn bài tiếp tục được kiểm tra.
+- Đã áp dụng migration trên Supabase thật và kiểm tra hàm ghi nhận trong transaction được rollback hoàn toàn. Không để lại lượt hoàn thành giả; các lượt tick khác giữ nguyên trong quá trình kiểm tra.

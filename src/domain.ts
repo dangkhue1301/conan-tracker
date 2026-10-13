@@ -71,9 +71,9 @@ export function safeUrl(value: string): boolean {
   }
 }
 export function validateHabits(habits: Habit[]): string | null {
-  const required = ['anki', 'grammar', 'mental', 'review', 'reading', 'writing']
-  if (habits.length !== 6 || required.some((id) => habits.filter((h) => h.id === id).length !== 1))
-    return 'Cần đủ sáu thói quen, mỗi việc một lần.'
+  const required = ['anki', 'grammar', 'mental', 'review', 'reading', 'writing', 'tidy']
+  if (habits.length !== 7 || required.some((id) => habits.filter((h) => h.id === id).length !== 1))
+    return 'Cần đủ bảy thói quen, mỗi việc một lần.'
   for (const h of habits) {
     if (!Number.isInteger(h.target) || h.target <= 0 || h.target > 10000)
       return `${h.title}: mốc làm đủ phải là số nguyên từ 1 đến 10000.`
