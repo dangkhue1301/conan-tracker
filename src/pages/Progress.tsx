@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   CalendarDays,
   Check,
@@ -10,19 +10,21 @@ import {
   Sparkles,
   TrendingUp,
 } from 'lucide-react'
-import type { Habit, Repository, Snapshot, WeeklyReview } from '../types'
+import type { Repository, Snapshot, WeeklyReview } from '../types'
 import type { Run } from '../App'
 import {
   activeHabits,
   addDays,
   longDate,
   planForDate,
+  habitTitle,
+  snapshotIndex,
   shortDate,
   weekDays,
   weeklyStats,
   weekStart,
 } from '../domain'
-import { AUTONOMY_LABELS, HABIT_IDS, STATUS_LABELS } from '../defaults'
+import { AUTONOMY_LABELS, HABIT_IDS, STATUS_LABELS, defaultHabits } from '../defaults'
 import { Button, Empty, Modal, SectionHeading } from '../ui'
 import { DailyChecklist } from './Today'
 import { MessageComposer } from './Goals'
@@ -43,23 +45,33 @@ export default function Progress({
   const [start, setStart] = useState(weekStart(currentDate)),
     [range, setRange] = useState(8),
     [selectedDay, setSelectedDay] = useState<string | null>(null)
-  const stats = weeklyStats(data, start, currentDate),
+  const index = useMemo(() => snapshotIndex(data), [data])
+  const stats = weeklyStats(data, start, currentDate, index),
     days = weekDays(start),
     firstWeek = weekStart(data.profile!.startedOn)
-  const habits = HABIT_IDS.map((id) =>
-    days.flatMap((date) => activeHabits(planForDate(data.plans, date))).find((h) => h.id === id),
-  ).filter((h): h is Habit => !!h)
+  const dayHabits = new Map(
+    days.map((date) => [
+      date,
+      new Set(activeHabits(planForDate(data.plans, date)).map((h) => h.id)),
+    ]),
+  )
+  const habits = HABIT_IDS.map((id) => ({
+    ...([...data.plans]
+      .reverse()
+      .flatMap((p) => p.habits)
+      .find((h) => h.id === id) ?? defaultHabits().find((h) => h.id === id)!),
+  })).map((h) => ({ ...h, title: habitTitle(h) }))
   const review = data.reviews.find((r) => r.weekStart === start)
   const stageThree = days.some(
     (d) => d >= data.profile!.startedOn && planForDate(data.plans, d)?.phase === 3,
   )
   const series = Array.from({ length: range }, (_, i) => {
     const d = addDays(weekStart(currentDate), -7 * (range - i - 1))
-    return { start: d, stats: weeklyStats(data, d, currentDate) }
+    return { start: d, stats: weeklyStats(data, d, currentDate, index) }
   })
   const recentMisses = HABIT_IDS.map((id) => ({
     id,
-    title: data.plans.at(-1)?.habits.find((h) => h.id === id)?.title ?? id,
+    title: habits.find((h) => h.id === id)?.title ?? id,
     missed: series.reduce((sum, w) => sum + (w.stats.perHabit[id]?.missed ?? 0), 0),
   }))
     .filter((h) => h.missed)
@@ -89,43 +101,10 @@ export default function Progress({
           </button>
         </div>
       </SectionHeading>
-      <div className="stats-grid">
-        <div className="card stat">
-          <span>Duy trì</span>
-          <strong>{stats.rate === null ? '—' : `${stats.rate}%`}</strong>
-          <small>
-            {stats.credited}/{stats.planned} lượt theo kế hoạch
-          </small>
-        </div>
-        <div className="card stat">
-          <span>Đã làm ít nhất</span>
-          <strong>
-            {stats.minimum}
-            <small> lượt</small>
-          </strong>
-          <small>Mỗi lần bắt đầu đều được ghi nhận</small>
-        </div>
-        <div className="card stat">
-          <span>Làm đủ</span>
-          <strong>
-            {stats.done}
-            <small> lượt</small>
-          </strong>
-          <small>Đạt yêu cầu của từng việc</small>
-        </div>
-        <div className="card stat">
-          <span>Làm thêm</span>
-          <strong>
-            {stats.extra}
-            <small> lượt</small>
-          </strong>
-          <small>Những lần em vượt mục tiêu</small>
-        </div>
-      </div>
       <section className="card weekly-table-card">
         <div className="card-topline">
           <div>
-            <h2>Những bước nhỏ trong tuần</h2>
+            <h2>Bảng theo dõi tuần</h2>
             <p className="muted">
               {stats.ended
                 ? stageThree
@@ -147,7 +126,8 @@ export default function Progress({
         </div>
         {habits.length ? (
           <>
-            <div className="table-scroll">
+            <p className="table-scroll-hint">Vuốt ngang để xem đủ các ngày.</p>
+            <div className="table-scroll" role="region" aria-label="Bảng tiến độ tuần" tabIndex={0}>
               <table className="weekly-table">
                 <thead>
                   <tr>
@@ -166,18 +146,13 @@ export default function Progress({
                       <th scope="row">{habit.title}</th>
                       {days.map((date) => {
                         const enabled =
-                            date >= data.profile!.startedOn &&
-                            activeHabits(planForDate(data.plans, date)).some(
-                              (h) => h.id === habit.id,
-                            ),
-                          rest = data.excuses.some((e) => e.date === date),
-                          check = data.checkins.find(
-                            (c) => c.date === date && c.habitId === habit.id,
-                          ),
+                            date >= data.profile!.startedOn && dayHabits.get(date)?.has(habit.id),
+                          rest = index.excuses.has(date),
+                          check = index.checkins.get(`${date}:${habit.id}`),
                           status = check?.status ?? 'not_started',
                           future = date > currentDate
                         const label = !enabled
-                          ? 'Chưa bật'
+                          ? 'Chưa áp dụng'
                           : rest
                             ? 'Được nghỉ'
                             : future
@@ -248,6 +223,39 @@ export default function Progress({
           />
         )}
       </section>
+      <div className="stats-grid">
+        <div className="card stat">
+          <span>Duy trì</span>
+          <strong>{stats.rate === null ? '—' : `${stats.rate}%`}</strong>
+          <small>
+            {stats.credited}/{stats.planned} lượt theo kế hoạch
+          </small>
+        </div>
+        <div className="card stat">
+          <span>Đã làm ít nhất</span>
+          <strong>
+            {stats.minimum}
+            <small> lượt</small>
+          </strong>
+          <small>Mỗi lần bắt đầu đều được ghi nhận</small>
+        </div>
+        <div className="card stat">
+          <span>Làm đủ</span>
+          <strong>
+            {stats.done}
+            <small> lượt</small>
+          </strong>
+          <small>Đạt yêu cầu của từng việc</small>
+        </div>
+        <div className="card stat">
+          <span>Làm thêm</span>
+          <strong>
+            {stats.extra}
+            <small> lượt</small>
+          </strong>
+          <small>Những lần em vượt mục tiêu</small>
+        </div>
+      </div>
       <div className="progress-bottom-grid">
         <section className="card trend-card">
           <div className="card-topline">

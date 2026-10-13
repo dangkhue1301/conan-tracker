@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowUpRight,
   BookOpen,
@@ -8,30 +8,29 @@ import {
   ChevronRight,
   Clock3,
   Heart,
-  Moon,
   Sparkles,
-  Sun,
   Target,
-  Trophy,
   Coffee,
 } from 'lucide-react'
 import {
   activeHabits,
   addDays,
   canEdit,
-  currentPeriod,
   hasMinimum,
+  habitTitle,
   isCredited,
   longDate,
   planForDate,
+  snapshotIndex,
   weekday,
   weeklyStats,
   weekStart,
 } from '../domain'
-import { STATUS_LABELS } from '../defaults'
-import type { CheckinStatus, Habit, Repository, Snapshot } from '../types'
+import { HABIT_IDS, STATUS_LABELS } from '../defaults'
+import type { Checkin, CheckinStatus, Habit, HabitId, Repository, Snapshot } from '../types'
 import type { Run } from '../App'
-import { Asset, Avatar, Button, CheckMark, Empty } from '../ui'
+import { Asset, Button, CheckMark, Empty, Modal } from '../ui'
+import { MessageComposer } from './Goals'
 
 interface Props {
   data: Snapshot
@@ -43,264 +42,196 @@ interface Props {
   onGoals: () => void
   onPreferences: () => void
 }
-export default function Today({
-  data,
-  repo,
-  run,
-  busy,
-  currentDate,
-  onProgress,
-  onGoals,
-  onPreferences,
-}: Props) {
-  const [date, setDate] = useState(currentDate),
-    previousToday = useRef(currentDate)
-  useEffect(() => {
-    if (date === previousToday.current) setDate(currentDate)
-    previousToday.current = currentDate
-  }, [currentDate, date])
+export default function Today({ data, repo, run, busy, currentDate, onProgress }: Props) {
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [showAll, setShowAll] = useState(false),
+    [compose, setCompose] = useState(false)
+  const [photo, setPhoto] = useState<{ path: string; alt: string } | null>(null)
+  const date = selectedDate ?? currentDate
+  const selectDate = (value: string) => setSelectedDate(value === currentDate ? null : value)
+  const index = useMemo(() => snapshotIndex(data), [data])
   const plan = planForDate(data.plans, date),
     habits = activeHabits(plan)
   const count = habits.filter((h) =>
-    isCredited(data.checkins.find((c) => c.date === date && c.habitId === h.id)?.status),
+    isCredited(index.checkins.get(`${date}:${h.id}`)?.status),
   ).length
-  const stats = weeklyStats(data, weekStart(currentDate), currentDate)
-  const yesterday = addDays(currentDate, -1),
-    wasMissing = activeHabits(planForDate(data.plans, yesterday)).some(
-      (h) =>
-        !isCredited(data.checkins.find((c) => c.date === yesterday && c.habitId === h.id)?.status),
-    )
-  const message = data.messages[0],
-    goal = data.goals[0],
-    reward = data.rewards.find((r) => r.visible)
-  const isToday = date === currentDate
+  const stats = weeklyStats(data, weekStart(currentDate), currentDate, index)
+  const messages = showAll ? data.messages : data.messages.slice(0, 3)
+  const profile = data.profile
+  if (!profile) return null
   return (
     <>
-      <section className="today-hero">
-        <div>
-          <p className="eyebrow">{longDate(date)}</p>
-          <h1>
-            {isToday ? `Chào ${data.profile!.name},` : 'Cùng nhìn lại ngày này,'}
-            <br />
-            <span>{isToday ? 'mình làm từng việc nhé.' : longDate(date)}</span>
-          </h1>
-          <p>
-            {isToday && wasMissing
-              ? 'Hôm nay là một cơ hội để bắt đầu lại.'
-              : 'Mỗi lần bắt đầu là một bước tiến của em.'}
-          </p>
-        </div>
-        <div className="hero-avatar">
-          <Avatar
-            avatar={data.profile!.avatar}
-            size="large"
-            onClick={data.actor.role !== 'parent' ? onPreferences : undefined}
-          />
-          <span className="small-tag">
-            <Sparkles size={12} />
-            Góc của em
-          </span>
-        </div>
-      </section>
       <div className="today-grid">
-        <div className="daily-column">
-          <section className="card checklist-card">
-            <div className="card-topline">
-              <div>
-                <p className="eyebrow">{isToday ? 'VIỆC HÔM NAY' : 'VIỆC TRONG NGÀY'}</p>
-                <h2>
-                  {count === habits.length && habits.length
-                    ? 'Em đã duy trì đủ các việc!'
-                    : 'Bắt đầu từ một việc nhỏ'}
-                </h2>
-              </div>
-              <div className="day-navigation">
-                <button
-                  className="icon-button"
-                  aria-label="Ngày trước"
-                  disabled={date <= data.profile!.startedOn}
-                  onClick={() => setDate(addDays(date, -1))}
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <input
-                  aria-label="Chọn ngày ghi nhận"
-                  type="date"
-                  value={date}
-                  min={data.profile!.startedOn}
-                  max={currentDate}
-                  onChange={(e) => {
-                    if (e.target.value) setDate(e.target.value)
-                  }}
-                />
-                <button
-                  className="icon-button"
-                  aria-label="Ngày sau"
-                  disabled={date >= currentDate}
-                  onClick={() => setDate(addDays(date, 1))}
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
+        <section className="card checklist-card">
+          <div className="checklist-heading">
+            <div>
+              <h1>{date === currentDate ? 'Hôm nay' : 'Việc trong ngày'}</h1>
+              <p className="muted">{longDate(date)}</p>
             </div>
-            {!isToday && (
-              <button className="text-button back-today" onClick={() => setDate(currentDate)}>
-                Về hôm nay
+            <div className="day-navigation">
+              <button
+                className="icon-button"
+                aria-label="Ngày trước"
+                disabled={date <= profile.startedOn}
+                onClick={() => selectDate(addDays(date, -1))}
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <input
+                aria-label="Chọn ngày ghi nhận"
+                type="date"
+                value={date}
+                min={profile.startedOn}
+                max={currentDate}
+                onChange={(e) => {
+                  if (e.target.value) selectDate(e.target.value)
+                }}
+              />
+              <button
+                className="icon-button"
+                aria-label="Ngày sau"
+                disabled={date >= currentDate}
+                onClick={() => selectDate(addDays(date, 1))}
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+          {selectedDate && (
+            <button className="text-button back-today" onClick={() => setSelectedDate(null)}>
+              Về hôm nay
+            </button>
+          )}
+          <div className="daily-progress">
+            <span>
+              Đã ghi nhận{' '}
+              <strong>
+                {count}/{habits.length}
+              </strong>{' '}
+              việc
+            </span>
+            <div className="progress-track">
+              <span style={{ width: `${habits.length ? (count / habits.length) * 100 : 0}%` }} />
+            </div>
+          </div>
+          <DailyChecklist
+            data={data}
+            repo={repo}
+            run={run}
+            busy={busy}
+            date={date}
+            currentDate={currentDate}
+          />
+          <p className="checklist-footnote">Một việc nhỏ cũng là một lần em duy trì thói quen.</p>
+        </section>
+        <aside className="today-sidebar">
+          <section className="card home-messages">
+            <div className="aside-heading">
+              <Heart size={19} />
+              <h2>Lời nhắn dành cho em</h2>
+            </div>
+            {profile.familyPhoto && (
+              <button
+                className="photo-preview"
+                onClick={() =>
+                  setPhoto({ path: profile.familyPhoto!, alt: 'Ảnh gia đình cổ vũ em' })
+                }
+              >
+                <Asset
+                  path={profile.familyPhoto}
+                  repo={repo}
+                  alt="Ảnh gia đình cổ vũ em"
+                  className="family-thumbnail"
+                />
               </button>
             )}
-            <div className="daily-progress">
-              <div>
-                <strong>
-                  {count}
-                  <span> / {habits.length}</span>
-                </strong>
-                <p>việc đã duy trì</p>
+            {messages.length ? (
+              <div className="home-message-list">
+                {messages.map((message) => (
+                  <article className="home-message" key={message.id}>
+                    <div className="message-byline">
+                      <strong>{message.authorName}</strong>
+                      <time dateTime={message.createdAt}>
+                        {new Intl.DateTimeFormat('vi-VN', {
+                          day: 'numeric',
+                          month: 'numeric',
+                          timeZone: 'Asia/Ho_Chi_Minh',
+                        }).format(new Date(message.createdAt))}
+                      </time>
+                    </div>
+                    <p>{message.body}</p>
+                    {message.imagePath && (
+                      <button
+                        className="photo-preview"
+                        onClick={() =>
+                          setPhoto({
+                            path: message.imagePath!,
+                            alt: `Ảnh từ ${message.authorName}`,
+                          })
+                        }
+                      >
+                        <Asset
+                          path={message.imagePath}
+                          repo={repo}
+                          alt={`Ảnh từ ${message.authorName}`}
+                          className="message-thumbnail"
+                        />
+                      </button>
+                    )}
+                  </article>
+                ))}
               </div>
-              <div className="progress-track">
-                <span style={{ width: `${habits.length ? (count / habits.length) * 100 : 0}%` }} />
-              </div>
-            </div>
-            <DailyChecklist
-              data={data}
-              repo={repo}
-              run={run}
-              busy={busy}
-              date={date}
-              currentDate={currentDate}
-            />
+            ) : (
+              <p className="message-empty">
+                Lời nhắn của ba mẹ và người hướng dẫn sẽ xuất hiện ở đây.
+              </p>
+            )}
+            {data.messages.length > 3 && (
+              <button className="text-button" onClick={() => setShowAll(!showAll)}>
+                {showAll ? 'Thu gọn' : 'Xem tất cả'}
+              </button>
+            )}
+            {data.actor.role !== 'learner' && (
+              <>
+                <button
+                  className="button secondary compose-toggle"
+                  onClick={() => setCompose(!compose)}
+                  aria-expanded={compose}
+                >
+                  {compose ? 'Thu gọn ô viết' : 'Viết lời nhắn'}
+                </button>
+                <div hidden={!compose}>
+                  <MessageComposer repo={repo} run={run} busy={busy} />
+                </div>
+              </>
+            )}
           </section>
-          <div className="gentle-note">
-            <BookOpen size={17} />
-            <p>
-              <strong>Đọc và viết theo điều em thích.</strong> Chọn sách chữ về bóng đá, những câu
-              chuyện hoặc chủ đề khiến em tò mò.
-            </p>
-          </div>
-        </div>
-        <aside className="today-sidebar">
           <section className="card weekly-peek">
             <div className="aside-heading">
-              <span className="round-icon">
-                <Target size={18} />
-              </span>
-              <h3>Tuần của em</h3>
+              <Target size={18} />
+              <h2>Tuần này</h2>
             </div>
-            <p className="aside-number">
-              {stats.credited}
-              <span> / {stats.planned} lượt</span>
+            <p className="weekly-count">
+              <strong>{stats.credited}</strong> / {stats.planned} lượt duy trì
             </p>
             <div className="progress-track">
               <span style={{ width: `${stats.rate ?? 0}%` }} />
             </div>
-            <p className="muted">
-              {planForDate(data.plans, currentDate)?.phase === 3
-                ? `Cùng hướng tới ${stats.target} lượt duy trì tuần này.`
-                : 'Ghi nhận từng lần em đã bắt đầu.'}
-            </p>
-            <div className="mini-week">
-              {Array.from({ length: 7 }, (_, i) => {
-                const d = addDays(weekStart(currentDate), i),
-                  hs = activeHabits(planForDate(data.plans, d))
-                const n = hs.filter((h) =>
-                  isCredited(data.checkins.find((c) => c.date === d && c.habitId === h.id)?.status),
-                ).length
-                const rest = data.excuses.some((e) => e.date === d)
-                return (
-                  <div
-                    key={d}
-                    className={`${d === currentDate ? 'current' : ''} ${n > 0 ? 'has-progress' : ''}`}
-                    title={`${longDate(d)}: ${rest ? 'Nghỉ' : `${n}/${hs.length} việc`}`}
-                  >
-                    <small>{i === 6 ? 'CN' : `T${i + 2}`}</small>
-                    <span>
-                      {rest ? (
-                        <Coffee size={13} />
-                      ) : n === hs.length && n ? (
-                        <Check size={15} />
-                      ) : n > 0 ? (
-                        n
-                      ) : (
-                        <span className="tiny-dot" />
-                      )}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
+            <p className="muted">Mốc tham khảo: {stats.target} lượt · 80%</p>
             <button className="text-button" onClick={onProgress}>
-              Xem tiến độ <ArrowUpRight size={15} />
+              Xem bảng tuần <ArrowUpRight size={16} />
             </button>
           </section>
-          <section className={`card encouragement-card ${message ? '' : 'quiet'}`}>
-            <Asset
-              path={data.profile!.familyPhoto}
-              repo={repo}
-              alt="Ảnh gia đình cổ vũ em"
-              className="family-photo"
-            />
-            <div className="aside-heading">
-              <Heart size={17} />
-              <h3>{message ? `${message.authorName} nhắn em` : 'Một chút động viên'}</h3>
-            </div>
-            {message ? (
-              <>
-                <Asset
-                  path={message.imagePath}
-                  repo={repo}
-                  alt="Ảnh kèm lời động viên"
-                  className="message-photo"
-                />
-                <p className="personal-message">“{message.body}”</p>
-                <button className="text-button" onClick={onGoals}>
-                  Đọc các lời nhắn <ArrowUpRight size={15} />
-                </button>
-              </>
-            ) : (
-              <p className="personal-message">
-                Em không cần làm hoàn hảo mọi ngày. Mình cứ quay lại, rồi làm từng việc.
-              </p>
-            )}
-          </section>
-          {goal && (
-            <section className="card goal-peek">
-              <div className="aside-heading">
-                <CompassIcon />
-                <h3>Điều em hướng tới</h3>
-              </div>
-              <Asset path={goal.imagePath} repo={repo} alt={goal.title} className="goal-photo" />
-              <h4>{goal.title}</h4>
-              <p className="muted">
-                {goal.milestones.filter((m) => m.achieved).length}/{goal.milestones.length} mốc đã
-                cùng xác nhận
-              </p>
-              <button className="text-button" onClick={onGoals}>
-                Nhìn về phía trước <ArrowUpRight size={15} />
-              </button>
-            </section>
-          )}
-          {reward && (
-            <section className="card reward-peek">
-              <Trophy size={21} />
-              <h3>{reward.received ? 'Cả nhà đã ghi nhận em' : 'Điều đang chờ em'}</h3>
-              <Asset
-                path={reward.imagePath}
-                repo={repo}
-                alt={reward.title}
-                className="reward-photo"
-              />
-              <strong>{reward.title}</strong>
-              <p>{reward.conditions}</p>
-              <button className="text-button" onClick={onGoals}>
-                Xem cùng mục tiêu <ArrowUpRight size={15} />
-              </button>
-            </section>
-          )}
         </aside>
       </div>
+      {photo && (
+        <Modal title={photo.alt} onClose={() => setPhoto(null)}>
+          <Asset path={photo.path} repo={repo} alt={photo.alt} className="full-photo" />
+        </Modal>
+      )}
     </>
   )
 }
-const CompassIcon = () => <Target size={17} />
 
 export function DailyChecklist({
   data,
@@ -317,13 +248,18 @@ export function DailyChecklist({
   date: string
   currentDate: string
 }) {
+  const [openMenu, setOpenMenu] = useState<HabitId | null>(null)
+  const index = useMemo(() => snapshotIndex(data), [data])
   const plan = planForDate(data.plans, date),
-    habits = activeHabits(plan),
-    excuse = data.excuses.find((e) => e.date === date)
-  if (date < data.profile!.startedOn)
+    active = new Set(activeHabits(plan).map((h) => h.id))
+  const habits = HABIT_IDS.map((id) => plan?.habits.find((h) => h.id === id)).filter(
+    (h): h is Habit => !!h,
+  )
+  const excuse = index.excuses.get(date)
+  if (!data.profile || date < data.profile.startedOn)
     return (
       <Empty
-        icon={<CalendarIcon />}
+        icon={<Clock3 size={26} />}
         title="Chưa bắt đầu theo dõi"
         text="Các ngày trước ngày bắt đầu không tính vào tiến độ."
       />
@@ -346,16 +282,6 @@ export function DailyChecklist({
       />
     )
   const editable = canEdit(data.actor.role, date, currentDate)
-  const groups = [
-    {
-      id: 'morning',
-      title: 'Buổi sáng',
-      hint: weekday(date) < 6 ? '05:15 – 05:45' : 'Giờ linh hoạt',
-      icon: Sun,
-    },
-    { id: 'review', title: 'Ôn bài', hint: 'Nhớ ghi lại điều đã ôn', icon: BookOpen },
-    { id: 'evening', title: 'Đọc và viết', hint: 'Một khoảng yên tĩnh cuối ngày', icon: Moon },
-  ] as const
   return (
     <>
       {!editable && (
@@ -367,41 +293,46 @@ export function DailyChecklist({
               : 'Tuần cũ được xem lại cùng người hướng dẫn.'}
         </p>
       )}
-      {groups
-        .filter((g) => habits.some((h) => h.period === g.id))
-        .map((group) => (
-          <section
-            className={`habit-group ${date === currentDate && currentPeriod() === group.id ? 'current-group' : ''}`}
-            key={group.id}
-          >
-            <div className="group-heading">
-              <group.icon size={16} />
-              <h3>{group.title}</h3>
-              <span>{group.hint}</span>
-              {date === currentDate && currentPeriod() === group.id && (
-                <span className="now-label">Lúc này</span>
-              )}
+      <div className="habit-list">
+        {habits.map((habit) =>
+          active.has(habit.id) ? (
+            <HabitRow
+              key={`${date}-${habit.id}`}
+              habit={{ ...habit, title: habitTitle(habit) }}
+              date={date}
+              check={index.checkins.get(`${date}:${habit.id}`)}
+              data={data}
+              repo={repo}
+              run={run}
+              busy={busy}
+              editable={editable}
+              menuOpen={openMenu === habit.id}
+              onMenu={(open) => setOpenMenu(open ? habit.id : null)}
+            />
+          ) : (
+            <div className="habit-row unscheduled" key={habit.id}>
+              <div className="habit-main">
+                <button
+                  className="habit-checkbox"
+                  role="checkbox"
+                  aria-checked={false}
+                  aria-label={`${habitTitle(habit)}: Chưa áp dụng`}
+                  disabled
+                >
+                  <CheckMark checked={false} />
+                </button>
+                <div className="habit-content">
+                  <h4>{habitTitle(habit)}</h4>
+                  <p>Chưa áp dụng vào ngày này</p>
+                </div>
+              </div>
             </div>
-            {habits
-              .filter((h) => h.period === group.id)
-              .map((habit) => (
-                <HabitRow
-                  key={`${date}-${habit.id}`}
-                  habit={habit}
-                  date={date}
-                  data={data}
-                  repo={repo}
-                  run={run}
-                  busy={busy}
-                  editable={editable}
-                />
-              ))}
-          </section>
-        ))}
+          ),
+        )}
+      </div>
     </>
   )
 }
-const CalendarIcon = () => <Clock3 size={26} />
 function HabitRow({
   habit,
   date,
@@ -410,6 +341,9 @@ function HabitRow({
   run,
   busy,
   editable,
+  check,
+  menuOpen,
+  onMenu,
 }: {
   habit: Habit
   date: string
@@ -418,13 +352,17 @@ function HabitRow({
   run: Run
   busy: boolean
   editable: boolean
+  check?: Checkin
+  menuOpen: boolean
+  onMenu: (open: boolean) => void
 }) {
-  const check = data.checkins.find((c) => c.date === date && c.habitId === habit.id),
-    status = check?.status ?? 'not_started'
+  const status = check?.status ?? 'not_started'
   const [note, setNote] = useState(check?.note ?? ''),
     [dirty, setDirty] = useState(false),
     [baseVersion, setBaseVersion] = useState(check?.version ?? 0),
-    [error, setError] = useState('')
+    [error, setError] = useState(''),
+    [saving, setSaving] = useState(false),
+    [feedback, setFeedback] = useState('')
   const input = useRef<HTMLTextAreaElement>(null),
     schedule = habit.schedule[String(weekday(date))]
   useEffect(() => {
@@ -433,9 +371,33 @@ function HabitRow({
       setBaseVersion(check?.version ?? 0)
     }
   }, [check?.note, check?.version, dirty])
+  const menu = useRef<HTMLDivElement>(null),
+    trigger = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!menuOpen) return
+    menu.current?.querySelector<HTMLButtonElement>('[role=menuitem]')?.focus()
+    const outside = (e: PointerEvent) => {
+      if (!menu.current?.contains(e.target as Node)) onMenu(false)
+    }
+    const escape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        e.stopPropagation()
+        onMenu(false)
+        trigger.current?.focus()
+      }
+    }
+    document.addEventListener('pointerdown', outside)
+    document.addEventListener('keydown', escape, true)
+    return () => {
+      document.removeEventListener('pointerdown', outside)
+      document.removeEventListener('keydown', escape, true)
+    }
+  }, [menuOpen, onMenu])
   const conflict = dirty && baseVersion !== (check?.version ?? 0)
   const save = async (next: CheckinStatus) => {
     setError('')
+    setFeedback('')
     if (habit.id === 'review' && next !== 'not_started' && !note.trim()) {
       setError('Ghi một dòng về điều em đã ôn trước nhé.')
       input.current?.focus()
@@ -453,8 +415,9 @@ function HabitRow({
           : next === 'done'
             ? `Đã làm đủ “${habit.title}”. Thêm một bước nhỏ!`
             : 'Đã cập nhật lại.'
-    if (
-      await run(
+    setSaving(true)
+    try {
+      const saved = await run(
         () =>
           repo.saveCheckin({
             date,
@@ -465,8 +428,13 @@ function HabitRow({
           }),
         data.actor.role === 'learner' ? praise : 'Đã cập nhật kết quả.',
       )
-    )
-      setDirty(false)
+      if (saved) {
+        setDirty(false)
+        setFeedback('Đã lưu')
+      } else setError('Chưa xác nhận kết quả. Xem thông báo phía trên và thử lại.')
+    } finally {
+      setSaving(false)
+    }
   }
   return (
     <div className={`habit-row ${isCredited(status) ? 'completed' : ''}`}>
@@ -519,43 +487,79 @@ function HabitRow({
             </a>
           )}
           {editable ? (
-            <details className="status-menu">
-              <summary
+            <div className="status-menu" ref={menu}>
+              <button
+                ref={trigger}
                 className={`status-badge ${status}`}
                 aria-label={`Chọn mức cho ${habit.title}`}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                disabled={busy}
+                onClick={() => onMenu(!menuOpen)}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    onMenu(true)
+                  }
+                }}
               >
-                {status === 'not_started' ? 'Chọn mức' : STATUS_LABELS[status]}
-                <ChevronDown size={13} />
-              </summary>
-              <div className="status-options">
-                {(
-                  [
-                    'done',
-                    ...(hasMinimum(habit) ? ['minimum'] : []),
-                    'extra',
-                    'not_started',
-                  ] as CheckinStatus[]
-                ).map((value) => (
-                  <button
-                    key={value}
-                    disabled={busy}
-                    onClick={(e) => {
-                      e.currentTarget.closest('details')?.removeAttribute('open')
-                      void save(value)
-                    }}
-                  >
-                    <span>
-                      {value === 'minimum'
-                        ? `Ít nhất ${habit.minimum} ${habit.unit}`
-                        : value === 'done'
-                          ? `Làm đủ ${habit.target} ${habit.unit}`
-                          : STATUS_LABELS[value]}
-                    </span>
-                    {value === status && <Check size={14} />}
-                  </button>
-                ))}
-              </div>
-            </details>
+                {status === 'not_started' ? 'Mức khác' : STATUS_LABELS[status]}
+                <ChevronDown size={14} />
+              </button>
+              {menuOpen && (
+                <div
+                  className="status-options"
+                  role="menu"
+                  aria-label={`Mức cho ${habit.title}`}
+                  onKeyDown={(e) => {
+                    const items = Array.from(
+                      e.currentTarget.querySelectorAll<HTMLButtonElement>('[role=menuitem]'),
+                    )
+                    const i = items.indexOf(document.activeElement as HTMLButtonElement)
+                    if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) {
+                      e.preventDefault()
+                      items[
+                        e.key === 'Home'
+                          ? 0
+                          : e.key === 'End'
+                            ? items.length - 1
+                            : (i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length
+                      ]?.focus()
+                    }
+                    if (e.key === 'Tab') onMenu(false)
+                  }}
+                >
+                  {(
+                    [
+                      'done',
+                      ...(hasMinimum(habit) ? ['minimum'] : []),
+                      'extra',
+                      'not_started',
+                    ] as CheckinStatus[]
+                  ).map((value) => (
+                    <button
+                      role="menuitem"
+                      key={value}
+                      disabled={busy}
+                      onClick={() => {
+                        onMenu(false)
+                        trigger.current?.focus()
+                        void save(value)
+                      }}
+                    >
+                      <span>
+                        {value === 'minimum'
+                          ? `Ít nhất ${habit.minimum} ${habit.unit}`
+                          : value === 'done'
+                            ? `Làm đủ ${habit.target} ${habit.unit}`
+                            : STATUS_LABELS[value]}
+                      </span>
+                      {value === status && <Check size={14} />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
             <span className={`status-badge ${status}`}>{STATUS_LABELS[status]}</span>
           )}
@@ -608,6 +612,7 @@ function HabitRow({
           )}
         </div>
       )}
+      {(saving || feedback) && <p className="row-feedback">{saving ? 'Đang lưu…' : feedback}</p>}
       {error && (
         <p className="field-error" role="alert">
           {error}

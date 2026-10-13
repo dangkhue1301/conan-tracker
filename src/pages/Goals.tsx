@@ -276,16 +276,21 @@ export function MessageComposer({
 }) {
   const [body, setBody] = useState(''),
     [imagePath, setImagePath] = useState<string | null>(null),
-    [uploading, setUploading] = useState(false)
+    [uploading, setUploading] = useState(false),
+    [feedback, setFeedback] = useState(''),
+    [error, setError] = useState('')
   return (
     <form
       className="message-composer"
       onSubmit={async (e) => {
         e.preventDefault()
-        if (await run(() => repo.saveMessage(body, imagePath), 'Đã gửi em lời động viên.')) {
+        setFeedback('')
+        setError('')
+        if (await run(() => repo.saveMessage(body, imagePath), '')) {
           setBody('')
           setImagePath(null)
-        }
+          setFeedback('Đã gửi em lời động viên.')
+        } else setError('Chưa xác nhận gửi. Nội dung vẫn được giữ để thử lại.')
       }}
     >
       <label>
@@ -299,6 +304,16 @@ export function MessageComposer({
           placeholder="Ví dụ: hôm nay ba thấy con đã tự ngồi vào đọc sách. Ba rất vui vì điều đó."
         />
       </label>
+      {feedback && (
+        <p className="form-feedback" role="status">
+          {feedback}
+        </p>
+      )}
+      {error && (
+        <p className="field-error" role="alert">
+          {error}
+        </p>
+      )}
       <div className="composer-bottom">
         <details className="image-disclosure">
           <summary>

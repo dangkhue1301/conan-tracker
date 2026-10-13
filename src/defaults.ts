@@ -44,7 +44,7 @@ export function defaultHabits(): Habit[] {
     },
     {
       id: 'review',
-      title: 'Ôn bài',
+      title: 'Ôn bài đã học',
       minimum: 20,
       target: 30,
       unit: 'phút',
@@ -72,7 +72,7 @@ export function defaultHabits(): Habit[] {
     },
     {
       id: 'writing',
-      title: 'Viết vài câu',
+      title: 'Tập viết tiếng Việt',
       minimum: 4,
       target: 6,
       unit: 'câu',

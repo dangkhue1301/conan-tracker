@@ -23,6 +23,7 @@ import type {
   Reward,
   Role,
   Snapshot,
+  SavePlanInput,
   WeeklyReview,
 } from './types'
 
@@ -41,17 +42,19 @@ export function demoSnapshot(role: Role = 'learner', date = today()): Snapshot {
   const startedOn = addDays(weekStart(date), -21)
   const habits = defaultHabits()
   const plans: Plan[] = [
-    { id: 'demo-plan-1', effectiveFrom: startedOn, phase: 1, habits },
+    { id: 'demo-plan-1', effectiveFrom: startedOn, phase: 1, revision: 1, habits },
     {
       id: 'demo-plan-2',
       effectiveFrom: addDays(startedOn, 7),
       phase: 2,
+      revision: 1,
       habits: structuredClone(habits),
     },
     {
       id: 'demo-plan-3',
       effectiveFrom: addDays(startedOn, 14),
       phase: 3,
+      revision: 1,
       habits: structuredClone(habits),
     },
   ]
@@ -142,6 +145,33 @@ export class DemoRepository implements Repository {
   private data(): Snapshot {
     const raw = this.storage.getItem(DEMO_KEY)
     const value = raw ? (JSON.parse(raw) as Snapshot) : demoSnapshot(this.role, this.clock())
+    for (const plan of value.plans) plan.revision ??= 1
+    if (raw && value.profile) {
+      const date = this.clock(),
+        current = planForDate(value.plans, date)
+      let changed = false
+      if (current && current.phase !== 3) {
+        if (current.effectiveFrom === date) {
+          current.phase = 3
+          current.revision++
+        } else
+          value.plans.push({
+            ...structuredClone(current),
+            id: id(),
+            effectiveFrom: date,
+            phase: 3,
+            revision: 1,
+          })
+        changed = true
+      }
+      for (const plan of value.plans)
+        if (plan.effectiveFrom > date && plan.phase !== 3) {
+          plan.phase = 3
+          plan.revision++
+          changed = true
+        }
+      if (changed) this.storage.setItem(DEMO_KEY, JSON.stringify(value))
+    }
     value.actor = demoActor(this.role)
     return value
   }
@@ -212,20 +242,34 @@ export class DemoRepository implements Repository {
     const data = this.data()
     if (data.profile) throw new Error('Góc học tập đã được thiết lập.')
     data.profile = profile
-    data.plans = [{ id: id(), effectiveFrom: profile.startedOn, phase: 1, habits }]
+    data.plans = [{ id: id(), effectiveFrom: profile.startedOn, phase: 3, revision: 1, habits }]
     this.write(data)
   }
-  async savePlan(plan: Omit<Plan, 'id'>) {
+  async savePlan(input: SavePlanInput) {
     this.mentor()
-    const error = validateHabits(plan.habits)
+    const error = validateHabits(input.habits)
     if (error) throw new Error(error)
-    if (plan.effectiveFrom <= this.clock())
-      throw new Error('Kế hoạch mới cần áp dụng từ ngày mai trở đi.')
     const data = this.data()
-    data.plans = [
-      ...data.plans.filter((p) => p.effectiveFrom !== plan.effectiveFrom),
-      { ...plan, id: id() },
-    ]
+    if (input.mode === 'create') {
+      if (input.effectiveFrom <= this.clock())
+        throw new Error('Kế hoạch mới cần áp dụng từ ngày mai trở đi.')
+      if (data.plans.some((p) => p.effectiveFrom === input.effectiveFrom))
+        throw new Error('Ngày này đã có lịch. Chọn sửa lịch sắp áp dụng.')
+      data.plans.push({
+        id: id(),
+        revision: 1,
+        effectiveFrom: input.effectiveFrom,
+        phase: 3,
+        habits: input.habits,
+      })
+    } else {
+      const plan = data.plans.find((p) => p.id === input.id)
+      if (!plan || plan.effectiveFrom <= this.clock())
+        throw new Error('Chỉ sửa được lịch chưa có hiệu lực.')
+      if (plan.revision !== input.expectedRevision)
+        throw new Error('Lịch vừa được sửa ở nơi khác. Hãy xem lại trước khi lưu.')
+      Object.assign(plan, { habits: input.habits, phase: 3, revision: plan.revision + 1 })
+    }
     this.write(data)
   }
   async savePreferences(avatar: AvatarId, accent: Accent) {
@@ -363,11 +407,12 @@ export class CloudRepository implements Repository {
   async initialize(profile: Profile, habits: Habit[]) {
     await this.rpc('initialize_tracker', { p_profile: profile, p_habits: habits })
   }
-  async savePlan(plan: Omit<Plan, 'id'>) {
-    await this.rpc('save_plan', {
-      p_effective_from: plan.effectiveFrom,
-      p_phase: plan.phase,
-      p_habits: plan.habits,
+  async savePlan(input: SavePlanInput) {
+    await this.rpc('save_plan_v2', {
+      p_effective_from: input.mode === 'create' ? input.effectiveFrom : null,
+      p_plan_id: input.mode === 'edit' ? input.id : null,
+      p_expected_revision: input.mode === 'edit' ? input.expectedRevision : null,
+      p_habits: input.habits,
     })
   }
   async savePreferences(avatar: AvatarId, accent: Accent) {

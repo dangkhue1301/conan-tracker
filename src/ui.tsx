@@ -74,6 +74,7 @@ export function Modal({
   close.current = onClose
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null
+    const previousOverflow = document.body.style.overflow
     const key = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close.current()
       if (e.key === 'Tab') {
@@ -102,7 +103,7 @@ export function Modal({
     return () => {
       clearTimeout(timer)
       document.removeEventListener('keydown', key)
-      document.body.style.overflow = ''
+      document.body.style.overflow = previousOverflow
       previous?.focus()
     }
   }, [])
@@ -120,7 +121,7 @@ export function Modal({
             <X size={20} />
           </button>
         </header>
-        {children}
+        <div className="modal-content">{children}</div>
       </section>
     </div>
   )

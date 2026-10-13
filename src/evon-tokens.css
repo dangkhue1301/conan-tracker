@@ -3,12 +3,13 @@
    Light theme only. The app overrides font and primary colours for Conan. */
 :root {
   color-scheme: light;
-  --background: #f4f4f6;
+  --background: #f6f8fa;
   --surface: #ffffff;
-  --foreground: #2c2c2c;
-  --muted: #707070;
-  --border: #f7f7f8;
-  --border-strong: #eaeaea;
+  --foreground: #0f172a;
+  --muted: #475569;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --control-border: #64748b;
   --surface-overlay: #ffffff;
   --elevation-popover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --elevation-modal: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);

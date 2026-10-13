@@ -59,14 +59,14 @@ describe('demo uses the same product rules', () => {
     const before = await repo('mentor').load()
     const habits = defaultHabits()
     habits.find((h) => h.id === 'reading')!.target = 8
-    await repo('mentor').savePlan({ effectiveFrom: '2026-10-15', phase: 3, habits })
+    await repo('mentor').savePlan({ mode: 'create', effectiveFrom: '2026-10-15', habits })
     const after = await repo('mentor').load()
     expect(planForDate(after.plans, '2026-10-14')).toEqual(planForDate(before.plans, '2026-10-14'))
     expect(
       planForDate(after.plans, '2026-10-15')!.habits.find((h) => h.id === 'reading')!.target,
     ).toBe(8)
     await expect(
-      repo('learner').savePlan({ effectiveFrom: '2026-10-15', phase: 3, habits }),
+      repo('learner').savePlan({ mode: 'create', effectiveFrom: '2026-10-15', habits }),
     ).rejects.toThrow('người hướng dẫn')
   })
   it('allows parents to encourage but not edit the learner profile, and learners cannot impersonate a parent', async () => {
@@ -90,4 +90,30 @@ describe('demo uses the same product rules', () => {
       '5 MB',
     )
   })
+})
+
+it('does not overwrite duplicate dates or stale scheduled plans in the demo', async () => {
+  const mentor = repo('mentor'),
+    habits = defaultHabits()
+  await mentor.savePlan({ mode: 'create', effectiveFrom: '2026-10-15', habits })
+  await expect(
+    mentor.savePlan({ mode: 'create', effectiveFrom: '2026-10-15', habits }),
+  ).rejects.toThrow('đã có lịch')
+  const future = (await mentor.load()).plans.find((p) => p.effectiveFrom === '2026-10-15')!
+  await mentor.savePlan({ mode: 'edit', id: future.id, expectedRevision: 1, habits })
+  await expect(
+    mentor.savePlan({ mode: 'edit', id: future.id, expectedRevision: 1, habits }),
+  ).rejects.toThrow('nơi khác')
+  expect((await mentor.load()).plans.find((p) => p.id === future.id)?.revision).toBe(2)
+})
+it('upgrades a stored four-habit schedule from today without changing old checks', async () => {
+  const data = await repo('mentor').load()
+  data.plans = [data.plans[0]]
+  data.plans[0].phase = 1
+  values.set('conan-tracker-demo-v1', JSON.stringify(data))
+  const upgraded = await repo('mentor').load()
+  expect(planForDate(upgraded.plans, '2026-10-13')?.phase).toBe(1)
+  expect(planForDate(upgraded.plans, '2026-10-14')?.phase).toBe(3)
+  expect(upgraded.checkins).toEqual(data.checkins)
+  expect((await repo('mentor').load()).plans).toEqual(upgraded.plans)
 })

@@ -21,12 +21,12 @@ afterEach(() => {
 const tick = (name: RegExp) => screen.getByRole('checkbox', { name })
 async function open(role = 'learner') {
   const result = render(<App />)
-  await screen.findByRole('heading', { name: /Chào Conan/ })
+  await screen.findByRole('heading', { name: 'Hôm nay' })
   if (role !== 'learner') {
     fireEvent.change(screen.getByRole('combobox', { name: 'Vai trong bản minh hoạ' }), {
       target: { value: role },
     })
-    await screen.findByRole('heading', { name: /Chào Conan/ })
+    await screen.findByRole('heading', { name: 'Hôm nay' })
   }
   return result
 }
@@ -42,14 +42,14 @@ describe('working app flows in a local DOM', () => {
   })
   it('requires the review note, saves it together with the tick and shows it after reopening', async () => {
     await open()
-    fireEvent.click(tick(/^Ôn bài:/))
+    fireEvent.click(tick(/^Ôn bài đã học:/))
     await screen.findByText('Ghi một dòng về điều em đã ôn trước nhé.')
-    expect(tick(/^Ôn bài:/).getAttribute('aria-checked')).toBe('false')
+    expect(tick(/^Ôn bài đã học:/).getAttribute('aria-checked')).toBe('false')
     fireEvent.change(screen.getByRole('textbox', { name: 'Hôm nay em đã ôn gì?' }), {
       target: { value: 'Sửa 3 bài sai về phân số' },
     })
-    fireEvent.click(tick(/^Ôn bài:/))
-    await waitFor(() => expect(tick(/^Ôn bài:/).getAttribute('aria-checked')).toBe('true'))
+    fireEvent.click(tick(/^Ôn bài đã học:/))
+    await waitFor(() => expect(tick(/^Ôn bài đã học:/).getAttribute('aria-checked')).toBe('true'))
     cleanup()
     await open()
     expect(
@@ -75,7 +75,7 @@ describe('working app flows in a local DOM', () => {
     expect((tick(/Ôn thẻ Anki/) as HTMLButtonElement).disabled).toBe(true)
     expect(screen.queryByRole('button', { name: 'Quản lý' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Chọn avatar và màu' })).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: 'Điều em hướng tới' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Mục tiêu' }))
     fireEvent.change(screen.getByRole('textbox', { name: 'Một lời gửi em' }), {
       target: { value: 'Ba ghi nhận hôm nay con đã tự mở sách.' },
     })
@@ -160,4 +160,66 @@ describe('working app flows in a local DOM', () => {
     )
     await waitFor(() => expect(tick(/Ôn thẻ Anki/).getAttribute('aria-checked')).toBe('true'))
   })
+})
+
+it('puts all six tasks and adult messages on the homepage', async () => {
+  await open('parent')
+  expect(screen.getAllByRole('checkbox')).toHaveLength(6)
+  expect(tick(/Tập viết tiếng Việt/)).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: 'Viết lời nhắn' }))
+  fireEvent.change(screen.getByRole('textbox', { name: 'Một lời gửi em' }), {
+    target: { value: 'Ba thấy con đã cố gắng hôm nay.' },
+  })
+  fireEvent.click(screen.getByRole('button', { name: 'Gửi lời nhắn' }))
+  await screen.findByText('Ba thấy con đã cố gắng hôm nay.')
+  expect(screen.getByRole('heading', { name: 'Hôm nay' })).toBeTruthy()
+})
+it('keeps one status menu open, closes outside and on Escape, and records a minimum', async () => {
+  await open()
+  fireEvent.click(screen.getByRole('button', { name: 'Chọn mức cho Luyện ngữ pháp' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Chọn mức cho Luyện tính nhẩm' }))
+  expect(screen.getAllByRole('menu')).toHaveLength(1)
+  fireEvent.keyDown(document, { key: 'Escape' })
+  expect(screen.queryByRole('menu')).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'Chọn mức cho Luyện ngữ pháp' }))
+  fireEvent.pointerDown(document.body)
+  expect(screen.queryByRole('menu')).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'Chọn mức cho Luyện ngữ pháp' }))
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Ít nhất 20 câu' }))
+  await waitFor(() => expect(tick(/Luyện ngữ pháp/).getAttribute('aria-checked')).toBe('mixed'))
+  fireEvent.click(tick(/Luyện ngữ pháp/))
+  await waitFor(() => expect(tick(/Luyện ngữ pháp/).getAttribute('aria-checked')).toBe('true'))
+})
+it('follows Vietnam today across midnight while preserving an explicitly selected historical date', async () => {
+  await open()
+  vi.setSystemTime(new Date('2026-10-14T17:00:01Z'))
+  fireEvent.focus(window)
+  await waitFor(() =>
+    expect((screen.getByLabelText('Chọn ngày ghi nhận') as HTMLInputElement).value).toBe(
+      '2026-10-15',
+    ),
+  )
+  fireEvent.change(screen.getByLabelText('Chọn ngày ghi nhận'), { target: { value: '2026-10-14' } })
+  vi.setSystemTime(new Date('2026-10-15T17:00:01Z'))
+  fireEvent.focus(window)
+  expect((screen.getByLabelText('Chọn ngày ghi nhận') as HTMLInputElement).value).toBe('2026-10-14')
+  fireEvent.click(screen.getByRole('button', { name: 'Về hôm nay' }))
+  await waitFor(() =>
+    expect((screen.getByLabelText('Chọn ngày ghi nhận') as HTMLInputElement).value).toBe(
+      '2026-10-16',
+    ),
+  )
+})
+it('renders a recovery state for an empty schedule rather than crashing', async () => {
+  const original = DemoRepository.prototype.load
+  vi.spyOn(DemoRepository.prototype, 'load').mockImplementation(async function (
+    this: DemoRepository,
+  ) {
+    const data = await original.call(this)
+    data.plans = []
+    return data
+  })
+  render(<App />)
+  await screen.findByRole('heading', { name: 'Chưa có lịch học đang áp dụng' })
+  expect(screen.queryByRole('checkbox')).toBeNull()
 })

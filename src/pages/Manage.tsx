@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Check, ChevronDown, Coffee, Settings2, ShieldCheck, Trophy } from 'lucide-react'
 import { addDays, planForDate, shortDate, validateHabits } from '../domain'
-import { PHASE_LABELS } from '../defaults'
-import type { Habit, Plan, Repository, Reward, Snapshot } from '../types'
+import { habitTitle } from '../domain'
+import type { Habit, Repository, Reward, Snapshot } from '../types'
 import type { Run } from '../App'
-import { Button, ImageField, SectionHeading } from '../ui'
+import { Button, ImageField, SectionHeading, Modal } from '../ui'
 
-export default function Manage({
+function ManageForm({
   data,
   repo,
   run,
@@ -19,12 +19,51 @@ export default function Manage({
   busy: boolean
   currentDate: string
 }) {
-  const currentPlan = planForDate(data.plans, currentDate) ?? data.plans[0]
+  const currentPlan = planForDate(data.plans, currentDate)!
+  const futurePlans = data.plans.filter((p) => p.effectiveFrom > currentDate)
+  const [mode, setMode] = useState<'create' | 'edit'>('create')
   const [sourceId, setSourceId] = useState(currentPlan.id)
-  const [habits, setHabits] = useState<Habit[]>(structuredClone(currentPlan.habits)),
-    [phase, setPhase] = useState<Plan['phase']>(currentPlan.phase),
-    [effectiveFrom, setEffectiveFrom] = useState(addDays(currentDate, 1)),
-    [formError, setFormError] = useState('')
+  const [habits, setHabits] = useState<Habit[]>(
+    structuredClone(currentPlan.habits).map((h) => ({ ...h, title: habitTitle(h) })),
+  )
+  const [revision, setRevision] = useState(currentPlan.revision)
+  const [effectiveFrom, setEffectiveFrom] = useState(addDays(currentDate, 1)),
+    [formError, setFormError] = useState(''),
+    [formFeedback, setFormFeedback] = useState(''),
+    [confirm, setConfirm] = useState(false)
+  const selectSource = (id: string, nextMode = mode) => {
+    const p = data.plans.find((item) => item.id === id)
+    if (!p) return
+    setSourceId(p.id)
+    setHabits(structuredClone(p.habits).map((h) => ({ ...h, title: habitTitle(h) })))
+    setRevision(p.revision)
+    setEffectiveFrom(nextMode === 'edit' ? p.effectiveFrom : addDays(currentDate, 1))
+    setFormError('')
+    setFormFeedback('')
+  }
+  const save = async () => {
+    setConfirm(false)
+    setFormError('')
+    setFormFeedback('')
+    const success = `Đã lưu kế hoạch áp dụng từ ${shortDate(effectiveFrom)}.`
+    if (
+      await run(async () => {
+        try {
+          await repo.savePlan(
+            mode === 'create'
+              ? { mode, effectiveFrom, habits }
+              : { mode, id: sourceId, expectedRevision: revision, habits },
+          )
+        } catch (error) {
+          setFormError((error as Error).message)
+          throw error
+        }
+      }, '')
+    ) {
+      setFormFeedback(success)
+      if (mode === 'edit') setRevision(revision + 1)
+    }
+  }
   const [name, setName] = useState(data.profile!.name),
     [familyPhoto, setFamilyPhoto] = useState(data.profile!.familyPhoto),
     [uploading, setUploading] = useState(false)
@@ -48,25 +87,14 @@ export default function Manage({
         <div className="card-topline">
           <div>
             <h2>Lịch và yêu cầu</h2>
-            <p className="muted">Hiện tại: {PHASE_LABELS[currentPlan.phase]}</p>
+            <p className="muted">Hiện tại: 6 việc học mỗi ngày</p>
           </div>
           <label className="compact-label">
-            Lấy cấu hình từ
-            <select
-              value={sourceId}
-              onChange={(e) => {
-                const p = data.plans.find((item) => item.id === e.target.value)!
-                setSourceId(p.id)
-                setHabits(structuredClone(p.habits))
-                setPhase(p.phase)
-                setEffectiveFrom(
-                  p.effectiveFrom > currentDate ? p.effectiveFrom : addDays(currentDate, 1),
-                )
-              }}
-            >
-              {data.plans.map((p) => (
+            {mode === 'create' ? 'Sao chép cấu hình từ' : 'Lịch sắp áp dụng'}
+            <select value={sourceId} onChange={(e) => selectSource(e.target.value)}>
+              {(mode === 'create' ? data.plans : futurePlans).map((p) => (
                 <option value={p.id} key={p.id}>
-                  {shortDate(p.effectiveFrom)} · {PHASE_LABELS[p.phase]}
+                  {shortDate(p.effectiveFrom)}
                 </option>
               ))}
             </select>
@@ -75,25 +103,34 @@ export default function Manage({
         <form
           onSubmit={(e) => {
             e.preventDefault()
-            const issue = validateHabits(habits)
+            setFormFeedback('')
+            const issue =
+              validateHabits(habits) ??
+              (mode === 'create' && data.plans.some((p) => p.effectiveFrom === effectiveFrom)
+                ? 'Ngày này đã có lịch. Chọn Sửa lịch sắp áp dụng để chỉnh lịch đó.'
+                : null)
             setFormError(issue ?? '')
-            if (!issue)
-              void run(
-                () => repo.savePlan({ effectiveFrom, phase, habits }),
-                `Đã lưu kế hoạch áp dụng từ ${shortDate(effectiveFrom)}.`,
-              )
+            if (!issue) {
+              if (mode === 'edit') setConfirm(true)
+              else void save()
+            }
           }}
         >
           <div className="plan-controls">
             <label>
-              Thói quen đang áp dụng
+              Thao tác với lịch
               <select
-                value={phase}
-                onChange={(e) => setPhase(Number(e.target.value) as Plan['phase'])}
+                value={mode}
+                onChange={(e) => {
+                  const next = e.target.value as 'create' | 'edit'
+                  setMode(next)
+                  selectSource(next === 'edit' ? futurePlans[0].id : currentPlan.id, next)
+                }}
               >
-                <option value={1}>{PHASE_LABELS[1]}</option>
-                <option value={2}>{PHASE_LABELS[2]}</option>
-                <option value={3}>{PHASE_LABELS[3]}</option>
+                <option value="create">Sao chép thành lịch mới</option>
+                <option value="edit" disabled={!futurePlans.length}>
+                  Sửa lịch sắp áp dụng
+                </option>
               </select>
             </label>
             <label>
@@ -102,6 +139,7 @@ export default function Manage({
                 type="date"
                 min={addDays(currentDate, 1)}
                 required
+                readOnly={mode === 'edit'}
                 value={effectiveFrom}
                 onChange={(e) => setEffectiveFrom(e.target.value)}
               />
@@ -117,11 +155,6 @@ export default function Manage({
                       {h.minimum && h.minimum < h.target
                         ? `Ít nhất ${h.minimum} · đủ ${h.target} ${h.unit}`
                         : `Đủ ${h.target} ${h.unit}`}
-                      {h.id === 'writing' && phase < 2
-                        ? ' · chưa bật'
-                        : h.id === 'review' && phase < 3
-                          ? ' · chưa bật'
-                          : ''}
                     </span>
                   </div>
                   <ChevronDown size={17} />
@@ -250,15 +283,36 @@ export default function Manage({
               {formError}
             </p>
           )}
+          {formFeedback && (
+            <p className="form-feedback" role="status">
+              {formFeedback}
+            </p>
+          )}
           <div className="form-actions">
             <p className="muted">URL mới cũng áp dụng cùng phiên bản kế hoạch.</p>
             <Button type="submit" busy={busy}>
               <Check size={16} />
-              Lưu kế hoạch
+              {mode === 'create' ? 'Lưu kế hoạch' : 'Lưu thay đổi'}
             </Button>
           </div>
         </form>
       </section>
+      {confirm && (
+        <Modal title="Lưu thay đổi lịch sắp áp dụng?" onClose={() => setConfirm(false)}>
+          <p>
+            Cập nhật sáu việc học của lịch ngày {shortDate(effectiveFrom)}. Các ngày đã qua giữ
+            nguyên.
+          </p>
+          <div className="modal-actions">
+            <Button className="secondary" onClick={() => setConfirm(false)}>
+              Xem lại
+            </Button>
+            <Button busy={busy} onClick={() => void save()}>
+              Lưu thay đổi
+            </Button>
+          </div>
+        </Modal>
+      )}
       <div className="management-grid">
         <section className="card">
           <div className="aside-heading">
@@ -461,4 +515,15 @@ function RewardEditor({
       </form>
     </details>
   )
+}
+
+export default function Manage(props: Parameters<typeof ManageForm>[0]) {
+  if (!props.data.profile || !planForDate(props.data.plans, props.currentDate))
+    return (
+      <section className="card">
+        <h2>Chưa có lịch học đang áp dụng</h2>
+        <p>Kiểm tra dữ liệu trước khi chỉnh lịch.</p>
+      </section>
+    )
+  return <ManageForm {...props} />
 }

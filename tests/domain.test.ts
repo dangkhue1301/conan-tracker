@@ -18,7 +18,9 @@ import type { Plan, Snapshot } from '../src/types'
 function fixture(): Snapshot {
   const data = demoSnapshot('learner', '2026-10-14')
   data.profile!.startedOn = '2026-10-12'
-  data.plans = [{ id: 'p1', effectiveFrom: '2026-10-12', phase: 1, habits: defaultHabits() }]
+  data.plans = [
+    { id: 'p1', effectiveFrom: '2026-10-12', phase: 1, revision: 1, habits: defaultHabits() },
+  ]
   data.checkins = []
   data.excuses = []
   return data
@@ -46,9 +48,9 @@ describe('Vietnamese calendar and edit window', () => {
 describe('versioned requirements and honest progress', () => {
   it('adds writing and review only from their plan effective dates', () => {
     const plans: Plan[] = [
-      { id: 'p3', effectiveFrom: '2026-10-20', phase: 3, habits: defaultHabits() },
-      { id: 'p1', effectiveFrom: '2026-10-12', phase: 1, habits: defaultHabits() },
-      { id: 'p2', effectiveFrom: '2026-10-16', phase: 2, habits: defaultHabits() },
+      { id: 'p3', effectiveFrom: '2026-10-20', phase: 3, revision: 1, habits: defaultHabits() },
+      { id: 'p1', effectiveFrom: '2026-10-12', phase: 1, revision: 1, habits: defaultHabits() },
+      { id: 'p2', effectiveFrom: '2026-10-16', phase: 2, revision: 1, habits: defaultHabits() },
     ]
     expect(activeHabits(planForDate(plans, '2026-10-15'))).toHaveLength(4)
     expect(activeHabits(planForDate(plans, '2026-10-16'))).toHaveLength(5)
@@ -125,7 +127,13 @@ describe('versioned requirements and honest progress', () => {
     const data = fixture(),
       newHabits = defaultHabits()
     newHabits[0].target = 12
-    data.plans.push({ id: 'p2', effectiveFrom: '2026-10-15', phase: 3, habits: newHabits })
+    data.plans.push({
+      id: 'p2',
+      effectiveFrom: '2026-10-15',
+      phase: 3,
+      revision: 1,
+      habits: newHabits,
+    })
     expect(planForDate(data.plans, '2026-10-14')!.habits[0].target).toBe(10)
     expect(planForDate(data.plans, '2026-10-15')!.habits[0].target).toBe(12)
     expect(weeklyStats(data, '2026-10-12', '2026-10-14').planned).toBe(3 * 4 + 4 * 6)

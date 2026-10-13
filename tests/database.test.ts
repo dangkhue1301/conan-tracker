@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
-import { readFile } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 import { defaultHabits, defaultProfile } from '../src/defaults'
 import type { Role, Snapshot } from '../src/types'
 
@@ -8,6 +8,7 @@ import type { Role, Snapshot } from '../src/types'
 // These tests execute the delivered migration and its RLS/RPCs, not a rewritten model.
 let db: PGlite
 const day = '2026-10-14'
+let upgrade: string
 const ids = {
   mentor: '00000000-0000-4000-8000-000000000001',
   learner: '00000000-0000-4000-8000-000000000002',
@@ -51,6 +52,14 @@ beforeAll(async () => {
   await db.exec(
     await readFile(new URL('../supabase/migrations/001_tracker.sql', import.meta.url), 'utf8'),
   )
+  const migrationName = (await readdir(new URL('../supabase/migrations/', import.meta.url))).find(
+    (n) => n.endsWith('_six_habits_and_plan_revisions.sql'),
+  )!
+  upgrade = await readFile(
+    new URL(`../supabase/migrations/${migrationName}`, import.meta.url),
+    'utf8',
+  )
+  await db.exec(upgrade)
   await db.exec(
     `create or replace function public.app_today() returns date language sql stable set search_path=public,pg_temp as $$ select date '${day}' $$;`,
   )
@@ -69,10 +78,11 @@ afterAll(async () => {
 })
 
 describe('database authorization and data integrity', () => {
-  it('starts phase one without fabricated personal history or messages', async () => {
+  it('starts all six habits without fabricated personal history or messages', async () => {
     const data = await snapshot()
     expect(data.actor.role).toBe('mentor')
-    expect(data.plans[0].phase).toBe(1)
+    expect(data.plans[0].phase).toBe(3)
+    expect(data.plans[0].revision).toBe(1)
     expect(data.checkins).toEqual([])
     expect(data.messages).toEqual([])
     expect(data.rewards).toEqual([])
@@ -128,7 +138,8 @@ describe('database authorization and data integrity', () => {
     await save('2026-10-11')
     await expect(save('2026-10-15')).rejects.toThrow('quyền')
   })
-  it('rejects inactive habits, invalid minimum levels and stale creates/updates', async () => {
+  it('keeps historical inactive habits, invalid levels and stale writes protected', async () => {
+    await db.exec('reset role; update plan_versions set phase=1;')
     await login('learner')
     await expect(save(day, 'review', 'done', 'Ôn bài')).rejects.toThrow('chưa được bật')
     await expect(save(day, 'anki', 'minimum')).rejects.toThrow('làm đủ')
@@ -154,17 +165,17 @@ describe('database authorization and data integrity', () => {
     await save()
     const habits = defaultHabits()
     habits[0].target = 12
-    await db.query('select save_plan($1::date,$2::smallint,$3::jsonb)', ['2026-10-15', 2, habits])
+    await db.query('select save_plan_v2($1::date,null,null,$2::jsonb)', ['2026-10-15', habits])
     const data = await snapshot()
     expect(data.plans[0].habits[0].target).toBe(10)
     expect(data.plans[1].habits[0].target).toBe(12)
     expect(data.checkins[0].planId).toBe(oldId)
     await expect(
-      db.query('select save_plan($1::date,$2::smallint,$3::jsonb)', [day, 3, habits]),
+      db.query('select save_plan_v2($1::date,null,null,$2::jsonb)', [day, habits]),
     ).rejects.toThrow('ngày mai')
     habits[0].minimum = 20
     await expect(
-      db.query('select save_plan($1::date,$2::smallint,$3::jsonb)', ['2026-10-16', 3, habits]),
+      db.query('select save_plan_v2($1::date,null,null,$2::jsonb)', ['2026-10-16', habits]),
     ).rejects.toThrow('không được vượt')
   })
   it('excuses a day without losing old records, and keeps granting leave mentor-only', async () => {
@@ -305,5 +316,64 @@ describe('database authorization and data integrity', () => {
         { id: crypto.randomUUID(), title: 'Thiếu mốc', description: '' },
       ]),
     ).rejects.toThrow('từ 1 đến 6 mốc')
+  })
+})
+
+describe('six-habit rollout and schedule revisions', () => {
+  it('supports writing and review immediately for a fresh tracker', async () => {
+    await login('learner')
+    await save(day, 'writing')
+    await save(day, 'review', 'done', 'Ôn lại phân số')
+    expect((await snapshot()).checkins).toHaveLength(2)
+  })
+  it('rejects duplicate dates, stale edits, historical edits and legacy writes', async () => {
+    const habits = defaultHabits()
+    await db.query('select save_plan_v2($1::date,null,null,$2::jsonb)', ['2026-10-15', habits])
+    await expect(
+      db.query('select save_plan_v2($1::date,null,null,$2::jsonb)', ['2026-10-15', habits]),
+    ).rejects.toThrow('đã có lịch')
+    const future = (await snapshot()).plans[1]
+    await db.query('select save_plan_v2(null,$1::uuid,$2::integer,$3::jsonb)', [
+      future.id,
+      1,
+      habits,
+    ])
+    await expect(
+      db.query('select save_plan_v2(null,$1::uuid,$2::integer,$3::jsonb)', [future.id, 1, habits]),
+    ).rejects.toThrow('vừa được sửa')
+    expect((await snapshot()).plans[1]).toMatchObject({ id: future.id, revision: 2, phase: 3 })
+    const old = (await snapshot()).plans[0]
+    await expect(
+      db.query('select save_plan_v2(null,$1::uuid,$2::integer,$3::jsonb)', [old.id, 1, habits]),
+    ).rejects.toThrow('chưa có hiệu lực')
+    await expect(
+      db.query('select save_plan($1::date,$2::smallint,$3::jsonb)', ['2026-10-16', 1, habits]),
+    ).rejects.toThrow('Tải lại trang')
+    await login('parent')
+    await expect(
+      db.query('select save_plan_v2($1::date,null,null,$2::jsonb)', ['2026-10-16', habits]),
+    ).rejects.toThrow('chưa được phép')
+  })
+  it('migrates current and future phases without changing prior check-ins or denominators, idempotently', async () => {
+    await save('2026-10-12')
+    const before = (await snapshot()).checkins
+    await db.exec('reset role; update plan_versions set phase=1;')
+    await db.query(
+      'insert into plan_versions(effective_from,phase,habits) values($1::date,2,$2::jsonb)',
+      ['2026-10-20', defaultHabits()],
+    )
+    await db.exec(upgrade)
+    await login('mentor')
+    const data = await snapshot()
+    expect(data.plans.map((p) => [p.effectiveFrom, p.phase])).toEqual([
+      ['2026-09-21', 1],
+      [day, 3],
+      ['2026-10-20', 3],
+    ])
+    expect(data.checkins).toEqual(before)
+    await db.exec('reset role;')
+    await db.exec(upgrade)
+    await login('mentor')
+    expect((await snapshot()).plans).toEqual(data.plans)
   })
 })

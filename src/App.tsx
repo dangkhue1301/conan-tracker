@@ -11,13 +11,13 @@ import {
   Sparkles,
   RefreshCw,
   LoaderCircle,
-  Palette,
 } from 'lucide-react'
 import type { Accent, AvatarId, Repository, Role, Snapshot } from './types'
 import { client, CloudRepository, DemoRepository, isConfigured } from './repository'
 import { defaultHabits, defaultProfile, ROLE_LABELS } from './defaults'
 import { today } from './domain'
 import { Avatar, avatarSrc, Button, Modal } from './ui'
+import { SnapshotLoader } from './snapshot-loader'
 import Today from './pages/Today'
 import Progress from './pages/Progress'
 import Goals from './pages/Goals'
@@ -44,6 +44,7 @@ export default function App() {
   const [currentDate, setCurrentDate] = useState(today()),
     [preferences, setPreferences] = useState(false)
   const working = useRef(false)
+  const loader = useRef<SnapshotLoader<Snapshot> | null>(null)
   const repo = useMemo<Repository>(
     () => (demo ? new DemoRepository(role) : new CloudRepository()),
     [demo, role],
@@ -63,38 +64,27 @@ export default function App() {
     return () => subscription.subscription.unsubscribe()
   }, [])
   const reload = useCallback(async () => {
-    if (demo || hasSession) setData(await repo.load())
-  }, [repo, demo, hasSession])
+    await loader.current?.refresh()
+  }, [])
   useEffect(() => {
     setData(null)
     setError('')
     if (!(demo || hasSession)) return
-    let active = true
-    void repo
-      .load()
-      .then((value) => {
-        if (active) setData(value)
-      })
-      .catch((err) => {
-        if (active) setError((err as Error).message)
-      })
+    const loading = new SnapshotLoader(
+      () => repo.load(),
+      setData,
+      (err) => setError(err.message),
+    )
+    loader.current = loading
+    void loading.refresh().catch(() => {})
     let timer: ReturnType<typeof setTimeout>
     const stop = repo.watch(() => {
       clearTimeout(timer)
-      timer = setTimeout(() => {
-        if (!working.current)
-          void repo
-            .load()
-            .then((value) => {
-              if (active) setData(value)
-            })
-            .catch((err) => {
-              if (active) setError((err as Error).message)
-            })
-      }, 120)
+      timer = setTimeout(() => loading.invalidate(), 120)
     })
     return () => {
-      active = false
+      loading.dispose()
+      if (loader.current === loading) loader.current = null
       clearTimeout(timer)
       stop()
     }
@@ -102,7 +92,7 @@ export default function App() {
   useEffect(() => {
     const focus = () => {
       setCurrentDate(today())
-      if (!working.current) void reload().catch((err) => setError((err as Error).message))
+      loader.current?.invalidate()
     }
     const clock = setInterval(() => setCurrentDate(today()), 30000)
     window.addEventListener('focus', focus)
@@ -162,13 +152,15 @@ export default function App() {
     async (action, success = 'Đã lưu.') => {
       if (working.current) return false
       working.current = true
+      const loading = loader.current
+      loading?.pause()
       setBusy(true)
       setError('')
       let saved = false
       try {
         await action()
         saved = true
-        setData(await repo.load())
+        await loading?.refresh()
         if (success) setToast(success)
         return true
       } catch (err) {
@@ -178,13 +170,14 @@ export default function App() {
             : `Chưa xác nhận lưu: ${(err as Error).message}`,
         )
         try {
-          setData(await repo.load())
+          await loading?.refresh()
         } catch {
           /* Retain the last confirmed snapshot when refresh fails. */
         }
         return false
       } finally {
         working.current = false
+        loading?.resume()
         setBusy(false)
       }
     },
@@ -285,6 +278,20 @@ export default function App() {
       />
     )
 
+  if (!data.plans.length || !data.plans.some((p) => p.effectiveFrom <= currentDate))
+    return (
+      <div className="loading-page">
+        <BookOpen />
+        <h2>Chưa có lịch học đang áp dụng</h2>
+        <p>Nhờ người hướng dẫn kiểm tra lịch học trước khi ghi nhận.</p>
+        <Button className="secondary" onClick={() => void reload().catch(() => {})}>
+          Tải lại lịch
+        </Button>
+        <Button className="secondary" onClick={() => void exit()}>
+          Đăng xuất
+        </Button>
+      </div>
+    )
   const actualView = view === 'manage' && data.actor.role !== 'mentor' ? 'today' : view
   return (
     <div className="app" data-accent={data.profile.accent}>
@@ -316,17 +323,14 @@ export default function App() {
             <span className="brand-mark">
               <Check size={22} strokeWidth={3} />
             </span>
-            <span>
-              Góc của {data.profile.name}
-              <small>Từng bước nhỏ, mỗi ngày</small>
-            </span>
+            <span>Góc của {data.profile.name}</span>
           </button>
           <nav aria-label="Điều hướng chính">
             {(
               [
                 { id: 'today', label: 'Hôm nay', icon: CalendarCheck },
                 { id: 'progress', label: 'Tiến độ', icon: ChartNoAxesColumnIncreasing },
-                { id: 'goals', label: 'Điều em hướng tới', icon: Compass },
+                { id: 'goals', label: 'Mục tiêu', icon: Compass },
               ] as const
             ).map((item) => (
               <button
@@ -358,7 +362,7 @@ export default function App() {
                 aria-label="Chọn avatar và màu"
                 title="Chọn avatar và màu"
               >
-                <Palette size={19} />
+                <Avatar avatar={data.profile.avatar} size="header-avatar" />
               </button>
             )}
             <span className="role-pill">{ROLE_LABELS[data.actor.role]}</span>
@@ -532,7 +536,7 @@ function InitialSetup({
             await run(() => repo.initialize(profile, defaultHabits()), 'Đã mở góc học tập.')
           }}
         >
-          <p>Bắt đầu với bốn việc nhỏ. Bạn có thể chỉnh mốc, giờ và thêm URL ở phần quản lý.</p>
+          <p>Bắt đầu với sáu việc nhỏ. Bạn có thể chỉnh mốc, giờ và thêm URL ở phần quản lý.</p>
           <label>
             Tên gọi
             <input

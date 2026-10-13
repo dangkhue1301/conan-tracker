@@ -2,16 +2,16 @@
 
 ## Đã kiểm tra trên máy
 
-- `npm test`: 42 bài kiểm tra trong 4 file. Phần giao diện chạy trong DOM cục bộ (JSDOM), phần cơ sở dữ liệu chạy migration thật trên PostgreSQL cục bộ qua PGlite. Có kiểm tra quyền của helper RLS tự động do Dashboard tạo.
+- `npm test`: 53 bài kiểm tra trong 5 file. Phần giao diện chạy trong DOM cục bộ (JSDOM), phần cơ sở dữ liệu chạy migration thật trên PostgreSQL cục bộ qua PGlite. Có kiểm tra quyền của helper RLS tự động do Dashboard tạo.
 - `npm run build`: TypeScript và Vite tạo bản production thành công.
 - Bản build với base path `/conan-tracker/`: kiểm tra đường dẫn JS/CSS, favicon, avatar và notice để chuẩn bị GitHub Pages.
 
 | Nhóm            | Nội dung                                                                                                                                                                                       |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ngày và báo cáo | Múi giờ Việt Nam tại nửa đêm, tuần thứ Hai–Chủ nhật qua năm mới, giai đoạn có ngày hiệu lực, mẫu số cả tuần, loại ngày được nghỉ, không gọi ngày tương lai là bỏ sót, làm thêm không vượt 100% |
+| Ngày và báo cáo | Múi giờ Việt Nam tại nửa đêm, tuần thứ Hai–Chủ nhật qua năm mới, lịch có ngày hiệu lực và bảo toàn giai đoạn lịch sử, mẫu số cả tuần, loại ngày được nghỉ, không gọi ngày tương lai là bỏ sót, làm thêm không vượt 100% |
 | Checklist       | Tick và mở lại vẫn giữ, ôn bài yêu cầu ghi chú, sửa ghi chú với phiên bản, giữ bản nháp khi tab khác sửa, từ chối ghi đè từ bản cũ, phân biệt lỗi lưu và lỗi tải lại                           |
 | Quyền           | Conan sửa trong tuần hiện tại; mentor sửa lịch sử; không tick tương lai; ba mẹ xem/gửi lời nhắn; tài khoản ngoài danh sách và anonymous bị chặn; không sửa vai hay bảng trực tiếp từ client    |
-| Quản lý         | Lịch mới chỉ từ tương lai, giữ yêu cầu cũ, mức ít nhất không vượt mức đầy đủ, URL mới chưa tác động hôm nay, tối đa hai mục tiêu                                                               |
+| Quản lý         | Lịch mới chỉ từ tương lai, chống trùng ngày/ghi đè từ phiên bản cũ, giữ yêu cầu cũ, mức ít nhất không vượt mức đầy đủ, URL mới chưa tác động hôm nay, tối đa hai mục tiêu                                                               |
 | Cá nhân hoá     | Chọn avatar/màu và giữ qua lần mở lại, chỉ người lớn tải ảnh, kho ảnh private và upload theo thư mục người dùng                                                                                |
 | Khuyến khích    | Tác giả lời nhắn do server xác nhận, ba mẹ không gỡ lời người khác, phần thưởng đang ẩn không được trả về cho Conan/ba mẹ                                                                      |
 
@@ -39,3 +39,12 @@ Auth và Storage infrastructure trong test SQL được mô phỏng để kiểm
 Đăng nhập trực tiếp bằng tài khoản Conan, signed URL qua Supabase Storage và Realtime giữa hai thiết bị chưa được xác nhận bằng thao tác dùng thật. Quy trình kiểm tra sau thiết lập nằm trong README.
 
 Công cụ trình duyệt từ chối mở localhost theo chính sách công cụ; việc kiểm tra giao diện ở trên dùng website công khai đã deploy. Chưa xác nhận bố cục trên điện thoại; CSS đã có bố cục responsive.
+
+
+## Đợt sửa giao diện 13/10/2026
+
+- Hôm nay hiển thị đủ sáu việc, Ôn bài đã học có ghi chú ngay dưới dòng và Tập viết tiếng Việt có tên rõ ràng. Lời nhắn cùng ảnh nhỏ nằm trên trang đầu; ba mẹ/người hướng dẫn gửi được tại đây.
+- Bảng tuần đặt trước các thống kê. Kiểm tra trình duyệt ở 1366×768, 1440×900, 768px, 820px và 390px: không tràn ngang toàn trang; bảng/biểu đồ rộng cuộn trong vùng riêng. Sáu nút tick có vùng bấm 44×44px.
+- Modal có header cố định và chỉ một vùng nội dung cuộn. Menu mức độ đóng khi chọn, bấm ngoài hoặc Escape; có điều hướng bàn phím.
+- Kiểm thử PostgreSQL chạy cả migration gốc và migration bổ sung: lịch cũ không đổi, các lượt tick giữ nguyên, migration chạy lại không tạo lịch mới; khách cũ không thể gọi hàm ghi đè lịch.
+- Kiểm thử đồng bộ bao gồm event đến trong lúc đang lưu, phản hồi tải dữ liệu về sai thứ tự và phản hồi từ phiên đã đóng.

@@ -34,10 +34,14 @@ export interface Habit {
 }
 export interface Plan {
   id: string
+  revision: number
   effectiveFrom: string
   phase: 1 | 2 | 3
   habits: Habit[]
 }
+export type SavePlanInput =
+  | { mode: 'create'; effectiveFrom: string; habits: Habit[] }
+  | { mode: 'edit'; id: string; expectedRevision: number; habits: Habit[] }
 export interface Checkin {
   date: string
   habitId: HabitId
@@ -111,7 +115,7 @@ export interface Repository {
   watch(callback: () => void): () => void
   saveCheckin(input: CheckinInput): Promise<void>
   initialize(profile: Profile, habits: Habit[]): Promise<void>
-  savePlan(plan: Omit<Plan, 'id'>): Promise<void>
+  savePlan(plan: SavePlanInput): Promise<void>
   savePreferences(avatar: AvatarId, accent: Accent): Promise<void>
   saveProfile(name: string, familyPhoto: string | null): Promise<void>
   saveExcuse(date: string, reason: string, remove?: boolean): Promise<void>

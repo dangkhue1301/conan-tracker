@@ -35,9 +35,19 @@ export function longDate(date: string): string {
   }).format(new Date(`${date}T12:00:00Z`))
 }
 export function planForDate(plans: Plan[], date: string): Plan | undefined {
-  return [...plans]
-    .filter((p) => p.effectiveFrom <= date)
-    .sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0]
+  return plans.reduce<Plan | undefined>(
+    (found, p) =>
+      p.effectiveFrom <= date && (!found || p.effectiveFrom > found.effectiveFrom) ? p : found,
+    undefined,
+  )
+}
+export const habitTitle = (h: Habit) =>
+  h.id === 'review' ? 'Ôn bài đã học' : h.id === 'writing' ? 'Tập viết tiếng Việt' : h.title
+export function snapshotIndex(data: Snapshot) {
+  return {
+    checkins: new Map(data.checkins.map((c) => [`${c.date}:${c.habitId}`, c])),
+    excuses: new Map(data.excuses.map((e) => [e.date, e])),
+  }
 }
 export function activeHabits(plan: Plan | undefined): Habit[] {
   return (
@@ -97,7 +107,12 @@ export function hasMinimum(habit: Habit): boolean {
 export function isCredited(status?: CheckinStatus): boolean {
   return !!status && status !== 'not_started'
 }
-export function weeklyStats(data: Snapshot, start: string, currentDate = today()) {
+export function weeklyStats(
+  data: Snapshot,
+  start: string,
+  currentDate = today(),
+  index = snapshotIndex(data),
+) {
   let planned = 0,
     credited = 0,
     minimum = 0,
@@ -107,14 +122,13 @@ export function weeklyStats(data: Snapshot, start: string, currentDate = today()
   const perHabit: Partial<Record<HabitId, { planned: number; credited: number; missed: number }>> =
     {}
   for (const date of weekDays(start)) {
-    if (!data.profile || date < data.profile.startedOn || data.excuses.some((e) => e.date === date))
-      continue
+    if (!data.profile || date < data.profile.startedOn || index.excuses.has(date)) continue
     const plan = planForDate(data.plans, date)
     for (const habit of activeHabits(plan)) {
       planned++
       const row = (perHabit[habit.id] ??= { planned: 0, credited: 0, missed: 0 })
       row.planned++
-      const check = data.checkins.find((c) => c.date === date && c.habitId === habit.id)
+      const check = index.checkins.get(`${date}:${habit.id}`)
       if (isCredited(check?.status)) {
         credited++
         row.credited++
