@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import {
   ArrowUpRight,
   BookOpen,
@@ -373,6 +373,41 @@ function HabitRow({
   }, [check?.note, check?.version, dirty])
   const menu = useRef<HTMLDivElement>(null),
     trigger = useRef<HTMLButtonElement>(null)
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({})
+  useLayoutEffect(() => {
+    if (!menuOpen) return
+    const placeMenu = () => {
+      const anchor = trigger.current,
+        options = menu.current?.querySelector<HTMLElement>('[role=menu]')
+      if (!anchor || !options) return
+      const rect = anchor.getBoundingClientRect()
+      const scrollRegion = anchor.closest('.modal-content')?.getBoundingClientRect()
+      const top = Math.max(8, scrollRegion?.top ?? 0),
+        bottom = Math.min(window.innerHeight - 8, scrollRegion?.bottom ?? window.innerHeight),
+        left = Math.max(8, scrollRegion?.left ?? 0),
+        right = Math.min(window.innerWidth - 8, scrollRegion?.right ?? window.innerWidth)
+      const below = bottom - rect.bottom - 6,
+        above = rect.top - top - 6,
+        height = options.scrollHeight + 2,
+        up = below < height && above > below,
+        width = Math.min(232, right - left)
+      setMenuStyle({
+        width,
+        left: Math.max(left - rect.left, Math.min(rect.width - width, right - rect.left - width)),
+        right: 'auto',
+        top: up ? 'auto' : 'calc(100% + 6px)',
+        bottom: up ? 'calc(100% + 6px)' : 'auto',
+        maxHeight: Math.max(58, up ? above : below),
+      })
+    }
+    placeMenu()
+    window.addEventListener('resize', placeMenu)
+    document.addEventListener('scroll', placeMenu, true)
+    return () => {
+      window.removeEventListener('resize', placeMenu)
+      document.removeEventListener('scroll', placeMenu, true)
+    }
+  }, [menuOpen])
   useEffect(() => {
     if (!menuOpen) return
     menu.current?.querySelector<HTMLButtonElement>('[role=menuitem]')?.focus()
@@ -463,19 +498,27 @@ function HabitRow({
               </span>
             )}
           </div>
-          <p>
-            {habit.target} {habit.unit}
+          <p className="habit-meta">
+            <span>
+              {habit.target} {habit.unit}
+            </span>
             {schedule?.subject && (
               <>
-                <span className="separator">·</span>
-                {schedule.subject}
+                <span className="separator" aria-hidden="true">
+                  ·
+                </span>
+                <span>{schedule.subject}</span>
               </>
             )}
             {schedule?.time && (
               <>
-                <span className="separator">·</span>
-                <Clock3 size={11} />
-                {schedule.time}
+                <span className="separator" aria-hidden="true">
+                  ·
+                </span>
+                <span className="habit-time">
+                  <Clock3 size={14} aria-hidden="true" />
+                  <time>{schedule.time}</time>
+                </span>
               </>
             )}
           </p>
@@ -509,6 +552,7 @@ function HabitRow({
               {menuOpen && (
                 <div
                   className="status-options"
+                  style={menuStyle}
                   role="menu"
                   aria-label={`Mức cho ${habit.title}`}
                   onKeyDown={(e) => {

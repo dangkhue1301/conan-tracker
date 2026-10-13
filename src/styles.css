@@ -563,10 +563,6 @@ small {
   align-items: center;
   gap: 5px;
 }
-.separator {
-  color: #b0babd;
-  margin: 0 3px;
-}
 .extra-star {
   color: #a47920;
 }
@@ -591,9 +587,6 @@ summary::-webkit-details-marker {
 }
 .status-menu {
   position: relative;
-}
-.status-menu[open] > summary {
-  outline: 1px solid var(--accent-line);
 }
 .status-options button:hover {
   background: var(--accent-soft);
@@ -792,19 +785,12 @@ summary::-webkit-details-marker {
 .weekly-table-card {
   margin-bottom: 24px;
 }
-.weekly-table th {
-  font-size: 14px;
-  font-weight: 600;
-  padding: 14px 10px;
-}
 .weekly-table thead th span,
 .weekly-table thead th small {
   display: block;
 }
 .weekly-table tbody td,
 .weekly-table tbody th {
-  padding-top: 10px;
-  padding-bottom: 10px;
   border-bottom: 1px solid #f0f3f4;
 }
 .weekly-table tbody tr:last-child td,
@@ -843,7 +829,7 @@ summary::-webkit-details-marker {
 .table-legend {
   display: flex;
   align-items: center;
-  gap: 17px;
+  gap: 12px 20px;
   flex-wrap: wrap;
   border-top: 1px solid var(--line);
   padding-top: 16px;
@@ -854,7 +840,8 @@ summary::-webkit-details-marker {
 .table-legend > span {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  white-space: nowrap;
 }
 .table-legend .day-cell {
   width: 20px;
@@ -868,6 +855,7 @@ summary::-webkit-details-marker {
   margin-bottom: 24px;
 }
 .table-legend i {
+  flex-shrink: 0;
   width: 8px;
   height: 8px;
   border-radius: 3px;
@@ -1077,6 +1065,7 @@ summary::-webkit-details-marker {
   position: relative;
 }
 .goal-cover {
+  display: block;
   width: calc(100% + 48px);
   height: 190px;
   object-fit: cover;
@@ -1557,14 +1546,13 @@ summary::-webkit-details-marker {
 }
 .milestone-editor > div {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 140px 30px;
+  grid-template-columns: minmax(0, 1fr) 140px 44px;
   gap: 10px;
   align-items: end;
   margin-bottom: 13px;
 }
 .milestone-editor > div > .icon-button {
   margin-bottom: 3px;
-  width: 30px;
 }
 .toast {
   position: fixed;
@@ -1785,9 +1773,6 @@ summary::-webkit-details-marker {
   .hero-avatar .small-tag {
     font-size: 14px;
   }
-  .today-sidebar .card {
-    padding: 18px;
-  }
   .section-heading h2 {
     font-size: 25px;
   }
@@ -1802,9 +1787,6 @@ summary::-webkit-details-marker {
   }
   .stat > strong {
     font-size: 28px;
-  }
-  .card {
-    padding: 21px;
   }
   .weekly-table-card .card-topline {
     flex-wrap: wrap;
@@ -1823,10 +1805,6 @@ summary::-webkit-details-marker {
   }
   .message-list {
     gap: 16px;
-  }
-  .goal-cover {
-    width: calc(100% + 42px);
-    margin: -21px -21px 20px;
   }
   .form-grid.two {
     grid-template-columns: minmax(0, 1fr);
@@ -1847,12 +1825,6 @@ summary::-webkit-details-marker {
     grid-template-columns: minmax(0, 1fr);
     gap: 15px;
   }
-  .modal {
-    padding: 22px;
-  }
-  .modal h2 {
-    font-size: 20px;
-  }
   .avatar-options img {
     width: 82px;
     height: 82px;
@@ -1871,10 +1843,6 @@ summary::-webkit-details-marker {
   }
   .demo-banner label {
     gap: 4px;
-  }
-  .header-actions .icon-button {
-    width: 31px;
-    height: 31px;
   }
   .app-header nav button svg {
     width: 13px;
@@ -1896,19 +1864,6 @@ summary::-webkit-details-marker {
   .checklist-card h2 {
     font-size: 17px;
   }
-  .habit-title h4 {
-    font-size: 14px;
-  }
-  .habit-content p {
-    font-size: 14px;
-  }
-  .status-badge {
-    font-size: 14px;
-    padding: 4px 6px;
-  }
-  .study-link {
-    font-size: 14px;
-  }
   .group-heading > span {
     font-size: 14px;
   }
@@ -1918,24 +1873,14 @@ summary::-webkit-details-marker {
   .group-heading .now-label {
     display: none;
   }
-  .review-note {
-    margin-left: 36px;
-  }
   .mini-week > div > span {
     width: 31px;
     height: 29px;
-  }
-  .card {
-    padding: 18px;
   }
   .stat {
     padding: 15px;
   }
   .stat > small {
-    font-size: 14px;
-  }
-  .table-legend {
-    gap: 10px;
     font-size: 14px;
   }
   .trend-chart {
@@ -1971,10 +1916,6 @@ summary::-webkit-details-marker {
   }
   .composer-bottom .button {
     align-self: flex-end;
-  }
-  .goal-cover {
-    width: calc(100% + 36px);
-    margin: -18px -18px 18px;
   }
   .reward-card {
     flex-direction: column;
@@ -2024,7 +1965,7 @@ summary::-webkit-details-marker {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .milestone-editor > div {
-    grid-template-columns: minmax(0, 1fr) 120px 26px;
+    grid-template-columns: minmax(0, 1fr) 120px 44px;
     gap: 7px;
   }
   .milestone-editor input {
@@ -2061,9 +2002,9 @@ summary::-webkit-details-marker {
 /* Minimal desktop tracker components. */
 
 .header-inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   max-width: 1200px;
   margin: auto;
   padding: 0;
@@ -2076,6 +2017,7 @@ summary::-webkit-details-marker {
   padding: 0 28px;
 }
 .brand {
+  justify-self: start;
   display: flex;
   align-items: center;
   border: 0;
@@ -2097,6 +2039,7 @@ summary::-webkit-details-marker {
   border-radius: 10px;
 }
 .header-actions {
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2214,6 +2157,10 @@ summary::-webkit-details-marker {
   height: 6px;
 }
 .habit-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
   padding: 8px 0;
   border-bottom: 1px solid var(--line);
 }
@@ -2222,10 +2169,7 @@ summary::-webkit-details-marker {
   border-bottom: 0;
 }
 .habit-main {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 44px;
+  display: contents;
 }
 .habit-checkbox {
   width: 44px;
@@ -2250,7 +2194,7 @@ summary::-webkit-details-marker {
   justify-content: center;
   color: white;
 }
-.habit-title h4 {
+.habit-content h4 {
   font-size: 16px;
   font-weight: 600;
 }
@@ -2260,17 +2204,39 @@ summary::-webkit-details-marker {
   line-height: 1.5;
   color: var(--muted);
 }
+.habit-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.habit-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.habit-meta .separator {
+  color: var(--border-strong);
+}
+.habit-time {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
 .habit-actions {
   display: flex;
   gap: 8px;
   align-items: center;
   flex-shrink: 0;
 }
+.habit-actions .status-menu {
+  width: 120px;
+}
 .study-link {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  white-space: nowrap;
   font-size: 14px;
 }
 .status-badge {
@@ -2279,6 +2245,7 @@ summary::-webkit-details-marker {
   justify-content: center;
   gap: 6px;
   min-height: 44px;
+  min-width: 120px;
   border: 1px solid transparent;
   padding: 8px 10px;
   font-size: 14px;
@@ -2286,6 +2253,9 @@ summary::-webkit-details-marker {
   background: var(--neutral-bg);
   color: var(--muted);
   white-space: nowrap;
+}
+.status-menu > .status-badge {
+  width: 100%;
 }
 .status-options {
   position: absolute;
@@ -2298,6 +2268,8 @@ summary::-webkit-details-marker {
   border-radius: 10px;
   box-shadow: var(--elevation-popover);
   z-index: 20;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .status-options button {
   min-height: 44px;
@@ -2313,7 +2285,14 @@ summary::-webkit-details-marker {
   border-radius: 6px;
 }
 .review-note {
-  margin: 8px 0 0 56px;
+  margin: 0;
+}
+.habit-row > .review-note,
+.habit-row > .habit-tip,
+.habit-row > .row-feedback,
+.habit-row > .field-error {
+  grid-column: 2 / -1;
+  min-width: 0;
 }
 .review-note label {
   font-size: 14px;
@@ -2321,6 +2300,7 @@ summary::-webkit-details-marker {
   color: var(--muted);
 }
 .review-note textarea {
+  display: block;
   min-height: 54px;
   height: 54px;
   padding: 8px 10px;
@@ -2328,14 +2308,24 @@ summary::-webkit-details-marker {
   line-height: 1.5;
 }
 .habit-tip {
-  margin: 4px 0 0 56px;
+  margin: 0;
   color: var(--muted);
   font-size: 14px;
 }
 .row-feedback {
-  margin: 4px 0 0 56px;
+  margin: 0;
   font-size: 14px;
   color: var(--accent);
+}
+.habit-row > .field-error {
+  margin: 0;
+}
+.note-save {
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.note-save .button {
+  min-height: 44px;
 }
 .checklist-footnote {
   border-top: 1px solid var(--line);
@@ -2347,9 +2337,13 @@ summary::-webkit-details-marker {
 .today-sidebar {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
   gap: 20px;
 }
 .today-sidebar .card {
+  min-width: 0;
+  width: 100%;
   padding: 20px;
 }
 .today-sidebar h2 {
@@ -2391,6 +2385,10 @@ summary::-webkit-details-marker {
   color: var(--muted);
   white-space: nowrap;
 }
+.message-byline strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .home-message p {
   font-size: 15px;
   line-height: 1.65;
@@ -2426,10 +2424,18 @@ summary::-webkit-details-marker {
 }
 .home-messages .message-composer {
   margin-top: 18px;
+  padding: 14px;
 }
 .home-messages .composer-bottom {
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
   gap: 12px;
+}
+.home-messages .image-disclosure {
+  max-width: none;
+}
+.home-messages .composer-bottom > .button {
+  align-self: stretch;
 }
 .weekly-count {
   font-size: 15px;
@@ -2472,12 +2478,22 @@ summary::-webkit-details-marker {
 .weekly-table {
   width: 100%;
   min-width: 710px;
+  table-layout: fixed;
   border-spacing: 0;
+}
+.weekly-table-card .table-scroll {
+  margin-top: 16px;
+}
+.weekly-table .habit-column {
+  width: 220px;
+}
+.weekly-table th,
+.weekly-table td {
+  text-align: center;
+  vertical-align: middle;
 }
 .weekly-table th:first-child {
   text-align: left;
-  width: 220px;
-  min-width: 190px;
   position: sticky;
   left: 0;
   z-index: 1;
@@ -2489,6 +2505,9 @@ summary::-webkit-details-marker {
 .weekly-table tbody td,
 .weekly-table tbody th {
   padding: 12px 8px;
+}
+.weekly-table tbody td {
+  line-height: 0;
 }
 .weekly-table thead th {
   padding: 10px 8px;
@@ -2548,10 +2567,21 @@ summary::-webkit-details-marker {
   box-shadow: var(--elevation-modal);
 }
 .modal > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   flex-shrink: 0;
   margin: 0;
   padding: 18px 24px;
   border-bottom: 1px solid var(--line);
+}
+.modal > header h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.modal > header .icon-button {
+  flex-shrink: 0;
 }
 .modal-content {
   overflow-y: auto;
@@ -2560,10 +2590,17 @@ summary::-webkit-details-marker {
   min-height: 0;
 }
 .modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
   position: sticky;
   bottom: -24px;
   background: var(--surface);
   padding-bottom: 16px;
+  padding-top: 12px;
 }
 .form-feedback {
   color: var(--success);
@@ -2582,6 +2619,7 @@ summary::-webkit-details-marker {
     grid-template-columns: minmax(0, 1fr);
   }
   .header-inner {
+    display: flex;
     flex-wrap: wrap;
     gap: 12px;
     padding: 14px 0;
@@ -2603,7 +2641,7 @@ summary::-webkit-details-marker {
   .today-sidebar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: start;
+    align-items: stretch;
   }
 }
 @media (max-width: 600px) {
@@ -2658,22 +2696,15 @@ summary::-webkit-details-marker {
   .today-sidebar {
     display: flex;
   }
-  .habit-main {
-    display: grid;
-    grid-template-columns: 44px minmax(0, 1fr);
-    gap: 6px 10px;
-  }
-  .habit-actions {
-    grid-column: 2;
-    flex-wrap: wrap;
-  }
   .habit-row {
+    grid-template-columns: 44px minmax(0, 1fr);
+    column-gap: 10px;
     padding: 12px 0;
   }
-  .review-note,
-  .habit-tip,
-  .row-feedback {
-    margin-left: 54px;
+  .habit-actions {
+    grid-column: 2 / -1;
+    justify-self: start;
+    flex-wrap: wrap;
   }
   .daily-progress {
     flex-wrap: wrap;
@@ -2700,8 +2731,21 @@ summary::-webkit-details-marker {
   .modal-content {
     padding: 18px;
   }
+  .modal > header {
+    padding: 14px 18px;
+  }
+  .modal h2 {
+    font-size: 20px;
+  }
   .modal-actions {
     bottom: -18px;
+  }
+  .modal-actions > .button {
+    flex: 1;
+  }
+  .goal-cover {
+    width: calc(100% + 36px);
+    margin: -18px -18px 18px;
   }
 }
 

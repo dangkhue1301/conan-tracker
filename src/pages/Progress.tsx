@@ -129,6 +129,12 @@ export default function Progress({
             <p className="table-scroll-hint">Vuốt ngang để xem đủ các ngày.</p>
             <div className="table-scroll" role="region" aria-label="Bảng tiến độ tuần" tabIndex={0}>
               <table className="weekly-table">
+                <colgroup>
+                  <col className="habit-column" />
+                  {days.map((date) => (
+                    <col key={date} />
+                  ))}
+                </colgroup>
                 <thead>
                   <tr>
                     <th>Thói quen</th>
