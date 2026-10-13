@@ -8,6 +8,7 @@ Nguồn: [evondev/evondevKit](https://github.com/evondev/evondevKit), nhánh `ma
 - `src/styles.css` đặt màu nhấn Conan và bố cục cụ thể. Một font hệ thống hỗ trợ tiếng Việt, không phụ thuộc tải font từ dịch vụ ngoài.
 - Bố cục chính: checklist chiếm cột lớn, tiến độ tuần/lời động viên ở cột bên; màn Tiến độ ưu tiên bảng tuần. Trên điện thoại các cột xếp dọc, bảng tuần cuộn ngang.
 - Button, badge, input, card, modal và empty state dùng cùng quy tắc trong `src/ui.tsx` và CSS. Không cài bộ biểu đồ chỉ để hiển thị 4–12 cột.
+- Checklist dùng lưới chung cho ô tick, nội dung, thao tác và ghi chú; metadata dùng flex với nhóm đồng hồ/giờ cách nhau 6px. Bảng tuần chia đều bảy cột ngày và căn giữa ô với tiêu đề; menu chọn mức đo khoảng trống để mở lên hoặc xuống trong vùng nhìn thấy.
 - Giữ outline bàn phím và nhãn ARIA cho checkbox/ô bảng dù mẫu thị giác tham chiếu thường rất tối giản; hỗ trợ reduced motion.
 
 Thông báo bản quyền và MIT license giữ ở `THIRD_PARTY_NOTICES.md`; bản đầy đủ kèm thư viện runtime nằm trong `public/THIRD_PARTY_NOTICES.txt` và được đưa vào bản deploy. Không gắn nhãn app là sản phẩm của tác giả evondevKit.

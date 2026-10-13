@@ -48,3 +48,12 @@ Công cụ trình duyệt từ chối mở localhost theo chính sách công c�
 - Modal có header cố định và chỉ một vùng nội dung cuộn. Menu mức độ đóng khi chọn, bấm ngoài hoặc Escape; có điều hướng bàn phím.
 - Kiểm thử PostgreSQL chạy cả migration gốc và migration bổ sung: lịch cũ không đổi, các lượt tick giữ nguyên, migration chạy lại không tạo lịch mới; khách cũ không thể gọi hàm ghi đè lịch.
 - Kiểm thử đồng bộ bao gồm event đến trong lúc đang lưu, phản hồi tải dữ liệu về sai thứ tự và phản hồi từ phiên đã đóng.
+
+## Kiểm tra căn chỉnh bổ sung (13/10/2026)
+
+- Kiểm tra bằng dữ liệu minh hoạ trên bản HTTPS đã deploy vì công cụ trình duyệt chặn localhost. Không ghi dữ liệu kiểm tra vào Supabase thật.
+- Đo ở 1366×768, 1440×900, 1024×768, 768×1024 và 390×844: cả Hôm nay và Tiến độ không tràn ngang toàn trang. Bảy cột ngày có độ rộng bằng nhau; tâm ô trạng thái lệch dưới 0,01px so với tâm tiêu đề ngày, thay cho độ lệch khoảng 36,5px trước khi sửa.
+- Sáu nhóm thao tác có cùng độ rộng 120px. Đồng hồ cách giờ 6px. Ghi chú và thông báo lỗi bắt đầu cùng trục với tên việc; form lời nhắn mở rộng nằm trong cột và xếp thao tác theo chiều dọc.
+- Menu của dòng cuối mở lên trên khi thiếu chỗ phía dưới; đã kiểm tra nằm trong viewport và trong vùng nội dung modal. Escape đóng menu. Tiêu đề modal và nút đóng cùng hàng, chỉ nội dung cuộn; nhóm nút cuối có khoảng cách 12px.
+- Kiểm tra thêm cửa sổ chỉnh mục tiêu và avatar trên màn hẹp; nút xoá mốc có cột riêng rộng 44px và không chồng lên ngày. Các nút và input dùng chung được thống nhất chiều cao tối thiểu 44px.
+- 53 bài kiểm thử hiện có, TypeScript, format và build đã qua. Kết quả đo bố cục được kiểm tra riêng trong trình duyệt; các ảnh xác nhận được lưu cục bộ, không đưa lên repository.

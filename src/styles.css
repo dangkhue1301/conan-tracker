@@ -105,7 +105,7 @@ select {
   border: 1px solid #dce3e5;
   border-radius: 8px;
   padding: 10px 12px;
-  min-height: 42px;
+  min-height: 44px;
   width: 100%;
 }
 input::placeholder,
@@ -217,7 +217,7 @@ small {
   background: var(--accent);
   color: white;
   border: 1px solid var(--accent);
-  min-height: 42px;
+  min-height: 44px;
   padding: 10px 17px;
   border-radius: 8px;
   font-size: 14px;
@@ -237,7 +237,7 @@ small {
   background: #f4f7f8;
 }
 .button.small {
-  min-height: 32px;
+  min-height: 44px;
   padding: 5px 11px;
   font-size: 14px;
 }
@@ -875,8 +875,8 @@ summary::-webkit-details-marker {
   margin-left: auto;
 }
 .trend-card .card-topline > select {
-  width: 85px;
-  min-height: 32px;
+  width: 104px;
+  min-height: 44px;
   font-size: 14px;
   padding: 4px 8px;
 }
@@ -1216,7 +1216,7 @@ summary::-webkit-details-marker {
   display: flex;
   align-items: center;
   gap: 5px;
-  min-height: 38px;
+  min-height: 44px;
 }
 .image-disclosure .image-field {
   margin-top: 13px;
@@ -1333,7 +1333,7 @@ summary::-webkit-details-marker {
   font-size: 14px;
 }
 .schedule-editor input {
-  min-height: 36px;
+  min-height: 44px;
   padding: 7px 10px;
   font-size: 14px;
 }
@@ -1777,7 +1777,6 @@ summary::-webkit-details-marker {
     font-size: 25px;
   }
   .section-heading > .button {
-    min-height: 36px;
     font-size: 14px;
     padding: 8px 11px;
   }
@@ -2323,9 +2322,6 @@ summary::-webkit-details-marker {
 .note-save {
   flex-wrap: wrap;
   gap: 8px 12px;
-}
-.note-save .button {
-  min-height: 44px;
 }
 .checklist-footnote {
   border-top: 1px solid var(--line);
