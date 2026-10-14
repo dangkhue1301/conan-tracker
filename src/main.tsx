@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './evon-tokens.css'
 import './styles.css'
+import './conanhabit.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

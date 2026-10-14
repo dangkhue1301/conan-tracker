@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   BookOpen,
   CalendarCheck,
@@ -11,23 +11,35 @@ import {
   Sparkles,
   RefreshCw,
   LoaderCircle,
+  Moon,
+  Sun,
+  ShoppingBag,
+  Trophy,
 } from 'lucide-react'
-import type { Accent, AvatarId, Repository, Role, Snapshot } from './types'
+import type { Repository, Role, Snapshot } from './types'
 import { client, CloudRepository, DemoRepository, isConfigured } from './repository'
 import { defaultHabits, defaultProfile, ROLE_LABELS } from './defaults'
 import { today } from './domain'
-import { Avatar, avatarSrc, Button, Modal } from './ui'
+import { Button } from './ui'
 import { SnapshotLoader } from './snapshot-loader'
-import Today from './pages/Today'
+import Dashboard from './pages/Dashboard'
 import Progress from './pages/Progress'
 import Goals from './pages/Goals'
 import Manage from './pages/Manage'
+import { AvatarStudio, MilestoneCelebration, ProfileAvatar } from './cosmetics'
+import { gameState, streakMilestones, type StreakMilestone } from './gamification'
+import { League, MonthlyRewards } from './pages/GameExtras'
+import MessageBubble from './MessageBubble'
+
+const Shop = lazy(() => import('./pages/Shop'))
 
 export type Run = (action: () => Promise<void>, success?: string) => Promise<boolean>
-type View = 'today' | 'progress' | 'goals' | 'manage'
+type View = 'today' | 'progress' | 'goals' | 'manage' | 'shop' | 'league'
 function initialView(): View {
   const v = new URLSearchParams(location.search).get('view')
-  return ['today', 'progress', 'goals', 'manage'].includes(v ?? '') ? (v as View) : 'today'
+  return ['today', 'progress', 'goals', 'manage', 'shop', 'league'].includes(v ?? '')
+    ? (v as View)
+    : 'today'
 }
 
 export default function App() {
@@ -43,12 +55,36 @@ export default function App() {
     [busy, setBusy] = useState(false)
   const [currentDate, setCurrentDate] = useState(today()),
     [preferences, setPreferences] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
+    localStorage.getItem('conanhabit-theme') === 'dark' ? 'dark' : 'light',
+  )
+  const [shopTab, setShopTab] = useState<'cosmetics' | 'monthly'>('cosmetics')
+  const [celebration, setCelebration] = useState<StreakMilestone[] | null>(null)
+  const dismissedMilestones = useRef(new Set<string>())
   const working = useRef(false)
   const loader = useRef<SnapshotLoader<Snapshot> | null>(null)
   const repo = useMemo<Repository>(
     () => (demo ? new DemoRepository(role) : new CloudRepository()),
     [demo, role],
   )
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem('conanhabit-theme', theme)
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', theme === 'dark' ? '#111425' : '#6366f1')
+  }, [theme])
+  useEffect(() => {
+    dismissedMilestones.current.clear()
+    setCelebration(null)
+  }, [repo, hasSession])
+  useEffect(() => {
+    if (!data?.profile || data.actor.role !== 'learner') return
+    const next = streakMilestones(data, currentDate).filter(
+      (m) => !dismissedMilestones.current.has(m.key),
+    )
+    if (next.length) setCelebration(next)
+  }, [data, currentDate])
 
   useEffect(() => {
     if (!client) return
@@ -101,6 +137,9 @@ export default function App() {
       window.removeEventListener('focus', focus)
     }
   }, [reload])
+  useEffect(() => {
+    loader.current?.invalidate()
+  }, [currentDate])
   useEffect(() => {
     if (!toast) return
     const timeout = setTimeout(() => setToast(''), 4500)
@@ -198,10 +237,12 @@ export default function App() {
           <span className="brand-mark">
             <Check />
           </span>{' '}
-          Góc của Conan
+          ConanHabit
         </div>
         <div className="welcome-content">
-          <Avatar avatar="detective" size="welcome-avatar" />
+          <span className="welcome-habit-emblem">
+            <Sparkles size={48} />
+          </span>
           <p className="eyebrow">TỪNG VIỆC NHỎ, MỖI NGÀY MỘT CHÚT</p>
           <h1>
             Hôm nay, mình
@@ -294,7 +335,7 @@ export default function App() {
     )
   const actualView = view === 'manage' && data.actor.role !== 'mentor' ? 'today' : view
   return (
-    <div className="app" data-accent={data.profile.accent}>
+    <div className="app">
       {demo && (
         <div className="demo-banner">
           <span>
@@ -323,7 +364,9 @@ export default function App() {
             <span className="brand-mark">
               <Check size={22} strokeWidth={3} />
             </span>
-            <span>Góc của {data.profile.name}</span>
+            <span>
+              Conan<span className="brand-habit">Habit</span>
+            </span>
           </button>
           <nav aria-label="Điều hướng chính">
             {(
@@ -331,6 +374,8 @@ export default function App() {
                 { id: 'today', label: 'Hôm nay', icon: CalendarCheck },
                 { id: 'progress', label: 'Tiến độ', icon: ChartNoAxesColumnIncreasing },
                 { id: 'goals', label: 'Mục tiêu', icon: Compass },
+                { id: 'shop', label: 'Shop', icon: ShoppingBag },
+                { id: 'league', label: 'Giải đấu', icon: Trophy },
               ] as const
             ).map((item) => (
               <button
@@ -345,6 +390,14 @@ export default function App() {
             ))}
           </nav>
           <div className="header-actions">
+            <button
+              className="icon-button"
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              aria-label={theme === 'light' ? 'Bật giao diện tối' : 'Bật giao diện sáng'}
+              title={theme === 'light' ? 'Giao diện tối' : 'Giao diện sáng'}
+            >
+              {theme === 'light' ? <Moon size={19} /> : <Sun size={19} />}
+            </button>
             {data.actor.role === 'mentor' && (
               <button
                 className={`icon-button ${actualView === 'manage' ? 'selected' : ''}`}
@@ -357,12 +410,12 @@ export default function App() {
             )}
             {data.actor.role !== 'parent' && (
               <button
-                className="icon-button"
+                className="icon-button profile-trigger"
                 onClick={() => setPreferences(true)}
-                aria-label="Chọn avatar và màu"
-                title="Chọn avatar và màu"
+                aria-label="Chỉnh hồ sơ và avatar"
+                title="Hồ sơ của Conan"
               >
-                <Avatar avatar={data.profile.avatar} size="header-avatar" />
+                <ProfileAvatar data={data} repo={repo} size="small" />
               </button>
             )}
             <span className="role-pill">{ROLE_LABELS[data.actor.role]}</span>
@@ -387,27 +440,61 @@ export default function App() {
           </div>
         )}
         {actualView === 'today' && (
-          <Today
-            data={data}
-            repo={repo}
-            run={run}
-            busy={busy}
-            currentDate={currentDate}
-            onProgress={() => navigate('progress')}
-            onGoals={() => navigate('goals')}
-            onPreferences={() => setPreferences(true)}
-          />
+          <Dashboard data={data} repo={repo} run={run} busy={busy} currentDate={currentDate} />
         )}
         {actualView === 'progress' && (
           <Progress data={data} repo={repo} run={run} busy={busy} currentDate={currentDate} />
         )}
         {actualView === 'goals' && <Goals data={data} repo={repo} run={run} busy={busy} />}
+        {actualView === 'shop' && (
+          <>
+            <div className="shop-main-tabs" role="group" aria-label="Nội dung Shop">
+              <button
+                className={shopTab === 'cosmetics' ? 'active' : ''}
+                onClick={() => setShopTab('cosmetics')}
+              >
+                <ShoppingBag size={17} />
+                Đồ của em
+              </button>
+              <button
+                className={shopTab === 'monthly' ? 'active' : ''}
+                onClick={() => setShopTab('monthly')}
+              >
+                <Sparkles size={17} />
+                Quà tháng
+              </button>
+            </div>
+            {shopTab === 'cosmetics' ? (
+              <Suspense
+                fallback={
+                  <div className="loading-page">
+                    <LoaderCircle className="spin" />
+                    <p>Đang mở Shop…</p>
+                  </div>
+                }
+              >
+                <Shop data={data} repo={repo} run={run} busy={busy} currentDate={currentDate} />
+              </Suspense>
+            ) : (
+              <MonthlyRewards
+                data={data}
+                repo={repo}
+                run={run}
+                busy={busy}
+                currentDate={currentDate}
+              />
+            )}
+          </>
+        )}
+        {actualView === 'league' && (
+          <League data={data} repo={repo} run={run} busy={busy} currentDate={currentDate} />
+        )}
         {actualView === 'manage' && (
           <Manage data={data} repo={repo} run={run} busy={busy} currentDate={currentDate} />
         )}
       </main>
       <footer className="app-footer">
-        <span>Góc của {data.profile.name}</span>
+        <span>ConanHabit</span>
         <span>Một ngày quên vẫn có thể bắt đầu lại.</span>
       </footer>
       {toast && (
@@ -417,7 +504,7 @@ export default function App() {
         </div>
       )}
       {preferences && (
-        <Preferences
+        <AvatarStudio
           data={data}
           repo={repo}
           run={run}
@@ -425,87 +512,26 @@ export default function App() {
           onClose={() => setPreferences(false)}
         />
       )}
+      <MessageBubble data={data} repo={repo} run={run} busy={busy} />
+      {celebration && (
+        <MilestoneCelebration
+          milestones={celebration}
+          styleId={gameState(data).equipped.celebration}
+          onClose={() => {
+            const keys = celebration.map((m) => m.key)
+            keys.forEach((k) => dismissedMilestones.current.add(k))
+            setCelebration(null)
+            void run(async () => {
+              for (let i = 0; i < keys.length; i += 200)
+                await repo.gameAction({ type: 'seen', keys: keys.slice(i, i + 200) })
+            }, '')
+          }}
+        />
+      )}
     </div>
   )
 }
 
-function Preferences({
-  data,
-  repo,
-  run,
-  busy,
-  onClose,
-}: {
-  data: Snapshot
-  repo: Repository
-  run: Run
-  busy: boolean
-  onClose: () => void
-}) {
-  const [avatar, setAvatar] = useState<AvatarId>(data.profile!.avatar),
-    [accent, setAccent] = useState<Accent>(data.profile!.accent)
-  return (
-    <Modal title="Góc này là của em" onClose={onClose}>
-      <p className="muted">Chọn một người đồng hành và màu em thích.</p>
-      <div className="avatar-options">
-        {(
-          [
-            { id: 'detective', label: 'Thám tử' },
-            { id: 'football', label: 'Cầu thủ' },
-            { id: 'builder', label: 'Nhà sáng tạo' },
-          ] as const
-        ).map((item) => (
-          <button
-            key={item.id}
-            className={avatar === item.id ? 'chosen' : ''}
-            onClick={() => setAvatar(item.id)}
-            aria-pressed={avatar === item.id}
-          >
-            <img src={avatarSrc(item.id)} alt="" />
-            <span>{item.label}</span>
-            {avatar === item.id && <Check size={15} />}
-          </button>
-        ))}
-      </div>
-      <span className="field-label">Màu em thích</span>
-      <div className="accent-options">
-        {(
-          [
-            { id: 'teal', label: 'Xanh ngọc' },
-            { id: 'blue', label: 'Xanh dương' },
-            { id: 'violet', label: 'Tím' },
-            { id: 'orange', label: 'Cam' },
-          ] as const
-        ).map((item) => (
-          <button
-            key={item.id}
-            data-accent={item.id}
-            className={accent === item.id ? 'chosen' : ''}
-            aria-pressed={accent === item.id}
-            onClick={() => setAccent(item.id)}
-          >
-            <span />
-            {item.label}
-          </button>
-        ))}
-      </div>
-      <div className="modal-actions">
-        <Button className="secondary" onClick={onClose}>
-          Để sau
-        </Button>
-        <Button
-          busy={busy}
-          onClick={async () => {
-            if (await run(() => repo.savePreferences(avatar, accent), 'Đã làm mới góc của em.'))
-              onClose()
-          }}
-        >
-          Chọn xong <Check size={16} />
-        </Button>
-      </div>
-    </Modal>
-  )
-}
 function InitialSetup({
   data,
   repo,

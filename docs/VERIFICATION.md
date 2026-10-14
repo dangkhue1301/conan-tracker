@@ -65,3 +65,14 @@ Công cụ trình duyệt từ chối mở localhost theo chính sách công c�
 - Kiểm thử migration trên PostgreSQL: giữ lịch sử sáu việc, giữ lượt tick và URL đã chỉnh, cập nhật lịch tương lai, chạy lại không tạo trùng; lịch đang bắt đầu hôm nay được mở rộng mà không đổi ID hay các lượt tick.
 - Mẫu số tuần chỉ bổ sung việc dọn bàn từ ngày có hiệu lực; không tính các ngày trước đó là thiếu việc. Quyền của ba mẹ và điều kiện ghi chú ôn bài tiếp tục được kiểm tra.
 - Đã áp dụng migration trên Supabase thật và kiểm tra hàm ghi nhận trong transaction được rollback hoàn toàn. Không để lại lượt hoàn thành giả; các lượt tick khác giữ nguyên trong quá trình kiểm tra.
+
+## ConanHabit: Shop và thói quen (14/10/2026)
+
+- Đổi tên thành ConanHabit; dashboard có bốn thẻ tổng quan, bảng bảy việc, biểu đồ tuần/streak, sáng/tối và bong bóng lời nhắn. URL dùng lịch đã có hiệu lực; lịch tương lai không đổi link hôm nay.
+- Coin và XP độc lập; điểm từ lịch sử có hiệu lực, ngày nghỉ không có điểm, sửa tick điều chỉnh nguồn thu. Mua được kiểm tra bằng catalog trên server và khóa giao dịch chung với thay đổi tiến độ; retry không trừ tiền hai lần. Vật phẩm giữ vĩnh viễn, khoản thiếu sau sửa tick bù bằng thu nhập tương lai.
+- Catalog gồm 78 món mua và một khung miễn phí. Avatar tải vào bucket riêng tư; learner/mentor chỉ ghi ảnh dưới thư mục của mình. Khung, banner, danh hiệu và kiếm tĩnh; linh thú, lửa streak và mừng cột mốc có chuyển động, hỗ trợ reduced-motion.
+- Khôi phục streak có lời tự nhìn lại, một ngày mỗi tháng, chỉ mentor duyệt. Quà tháng cần đủ tháng dương lịch, ba mẹ/mentor duyệt, một yêu cầu còn hiệu lực mỗi tháng. Không tích hợp thanh toán hoặc mua quà ngoài đời.
+- Giải gồm 29 đối thủ ảo với tên và avatar hư cấu; thông tin giải nói rõ mô phỏng. Bot có lịch điểm cố định, top 1 có thể đạt được; kết quả chỉ chốt một lần, tuần không tham gia không xuống hạng.
+- 108/108 kiểm thử trên 9 file đạt, bao gồm tương tác App/Shop, PostgreSQL, repository, lịch sử, quyền, phép tính điểm và trạng thái đồng bộ. TypeScript và build đạt. Build còn cảnh báo chunk JavaScript lớn hơn 500 kB; đây là cảnh báo không chặn build.
+- Migration `20261014021649_conanhabit_gamification.sql` đã áp dụng trên Supabase. Hash toàn bộ check-in, số lượt và số kế hoạch trước/sau khớp nhau. Snapshot thật được kiểm tra bằng vai mentor trong transaction rollback: ví 0 Coin đã tiêu, một khung miễn phí; anon không gọi được game_action, snapshot nội bộ cũ không được exposed.
+- Advisors không có lỗi RLS mới. Cảnh báo SECURITY DEFINER cho các RPC gọi có chủ đích vẫn hiện; mỗi RPC kiểm tra allowlist/vai trước khi đọc hoặc ghi, helper riêng không được cấp quyền. Xem [quy tắc kiểm tra RPC](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable). Cảnh báo bảo vệ mật khẩu cũ giữ nguyên; ứng dụng sử dụng Google OAuth.

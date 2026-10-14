@@ -240,6 +240,7 @@ export function DailyChecklist({
   busy,
   date,
   currentDate,
+  onlyHabit,
 }: {
   data: Snapshot
   repo: Repository
@@ -247,14 +248,15 @@ export function DailyChecklist({
   busy: boolean
   date: string
   currentDate: string
+  onlyHabit?: HabitId
 }) {
   const [openMenu, setOpenMenu] = useState<HabitId | null>(null)
   const index = useMemo(() => snapshotIndex(data), [data])
   const plan = planForDate(data.plans, date),
     active = new Set(activeHabits(plan).map((h) => h.id))
-  const habits = HABIT_IDS.map((id) => plan?.habits.find((h) => h.id === id)).filter(
-    (h): h is Habit => !!h,
-  )
+  const habits = HABIT_IDS.filter((id) => !onlyHabit || id === onlyHabit)
+    .map((id) => plan?.habits.find((h) => h.id === id))
+    .filter((h): h is Habit => !!h)
   const excuse = index.excuses.get(date)
   if (!data.profile || date < data.profile.startedOn)
     return (
@@ -491,7 +493,15 @@ function HabitRow({
         </button>
         <div className="habit-content">
           <div className="habit-title">
-            <h4>{habit.title}</h4>
+            <h4>
+              {habit.url ? (
+                <a href={habit.url} target="_blank" rel="noopener noreferrer">
+                  {habit.title} <ArrowUpRight size={13} />
+                </a>
+              ) : (
+                habit.title
+              )}
+            </h4>
             {status === 'extra' && (
               <span className="extra-star" title="Em đã làm thêm">
                 <Sparkles size={14} />
@@ -524,11 +534,6 @@ function HabitRow({
           </p>
         </div>
         <div className="habit-actions">
-          {habit.url && (
-            <a className="study-link" href={habit.url} target="_blank" rel="noopener noreferrer">
-              Mở học <ArrowUpRight size={14} />
-            </a>
-          )}
           {editable ? (
             <div className="status-menu" ref={menu}>
               <button

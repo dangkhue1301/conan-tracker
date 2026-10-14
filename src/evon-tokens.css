@@ -1,6 +1,6 @@
 /* Adapted from evondev/evondevKit, references/tokens.css (2026-10-12).
    Copyright (c) 2026 Tuấn Trần. MIT; see THIRD_PARTY_NOTICES.md.
-   Light theme only. The app overrides font and primary colours for Conan. */
+   Base light tokens; conanhabit.css adds the dark theme and app colours. */
 :root {
   color-scheme: light;
   --background: #f6f8fa;

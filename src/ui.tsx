@@ -2,6 +2,21 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Camera, Check, X, LoaderCircle, ImagePlus } from 'lucide-react'
 import type { AvatarId, Repository } from './types'
 
+let bodyLocks = 0
+let originalOverflow = ''
+export function lockBodyScroll() {
+  if (bodyLocks++ === 0) {
+    originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+  }
+  let unlocked = false
+  return () => {
+    if (unlocked) return
+    unlocked = true
+    if (--bodyLocks === 0) document.body.style.overflow = originalOverflow
+  }
+}
+
 export const avatarSrc = (avatar: AvatarId) => `${import.meta.env.BASE_URL}avatars/${avatar}.png`
 export function Avatar({
   avatar,
@@ -71,17 +86,21 @@ export function Modal({
   onClose: () => void
 }) {
   const close = useRef(onClose)
+  const dialog = useRef<HTMLElement>(null)
   close.current = onClose
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null
-    const previousOverflow = document.body.style.overflow
+    const unlock = lockBodyScroll()
     const key = (e: KeyboardEvent) => {
+      if (
+        Array.from(document.querySelectorAll('[role="dialog"][aria-modal="true"]')).at(-1) !==
+        dialog.current
+      )
+        return
       if (e.key === 'Escape') close.current()
       if (e.key === 'Tab') {
         const nodes = Array.from(
-          document.querySelectorAll<HTMLElement>(
-            '.modal button, .modal input, .modal textarea, .modal select, .modal a',
-          ),
+          dialog.current?.querySelectorAll<HTMLElement>('button, input, textarea, select, a') ?? [],
         ).filter((n) => !n.hasAttribute('disabled') && n.getClientRects().length > 0)
         const first = nodes[0],
           last = nodes.at(-1)
@@ -95,15 +114,14 @@ export function Modal({
       }
     }
     document.addEventListener('keydown', key)
-    document.body.style.overflow = 'hidden'
     const timer = setTimeout(
-      () => document.querySelector<HTMLElement>('.modal button, .modal input')?.focus(),
+      () => dialog.current?.querySelector<HTMLElement>('button, input')?.focus(),
       0,
     )
     return () => {
       clearTimeout(timer)
       document.removeEventListener('keydown', key)
-      document.body.style.overflow = previousOverflow
+      unlock()
       previous?.focus()
     }
   }, [])
@@ -114,7 +132,7 @@ export function Modal({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <section className="modal" role="dialog" aria-modal="true" aria-label={title}>
+      <section ref={dialog} className="modal" role="dialog" aria-modal="true" aria-label={title}>
         <header>
           <h2>{title}</h2>
           <button className="icon-button" onClick={onClose} aria-label="Đóng">

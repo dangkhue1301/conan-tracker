@@ -1,8 +1,8 @@
-# Góc của Conan
+# ConanHabit
 
 Website nhỏ để Conan nhớ việc cần làm, tự ghi nhận và cùng người hướng dẫn nhìn lại sự tiến bộ. Frontend React + TypeScript + Vite; GitHub Pages phục vụ website, Supabase lưu dữ liệu và đăng nhập Google. Giao diện dựa trên [evondevKit](https://github.com/evondev/evondevKit); cách áp dụng ghi trong [docs/FRONTEND.md](docs/FRONTEND.md).
 
-Bản đã deploy: [Góc của Conan](https://dangkhue1301.github.io/conan-tracker/). Google đang ở chế độ Testing, chỉ xin quyền đăng nhập cơ bản nên không bắt buộc Test users; quyền dữ liệu do allowlist riêng của Supabase kiểm soát. Trạng thái kiểm tra thực tế ghi trong [docs/VERIFICATION.md](docs/VERIFICATION.md). Các bước thiết lập bên dưới dùng khi dựng một bản riêng từ mã nguồn này.
+Bản đã deploy: [ConanHabit](https://dangkhue1301.github.io/conan-tracker/). Google đang ở chế độ Testing, chỉ xin quyền đăng nhập cơ bản nên không bắt buộc Test users; quyền dữ liệu do allowlist riêng của Supabase kiểm soát. Trạng thái kiểm tra thực tế ghi trong [docs/VERIFICATION.md](docs/VERIFICATION.md). Các bước thiết lập bên dưới dùng khi dựng một bản riêng từ mã nguồn này.
 
 ## Chạy thử ngay trên máy
 
@@ -25,10 +25,15 @@ npm run preview
 
 ## Những gì đã có
 
-- **Hôm nay:** tick làm đủ; menu chọn làm ít nhất / làm thêm / bỏ ghi nhận; mở URL học khi đã điền; ôn bài cần một dòng ghi chú.
+- **Hôm nay:** bốn thẻ tổng quan, bảng bảy thói quen theo tuần và biểu đồ; tick trực tiếp hoặc mở “Ghi chi tiết” để chọn mức ít nhất/làm thêm. Bấm tên việc để mở URL học; ôn bài cần một dòng ghi chú.
 - **Tiến độ:** bảng từ thứ Hai đến Chủ nhật, xem lại ngày, xu hướng 4/8/12 tuần, những việc hay quên, tổng kết tuần và mức cần nhắc.
 - **Điều em hướng tới:** tối đa hai mục tiêu với các mốc cùng xác nhận, ảnh nếu đã có, lời nhắn thật từ người lớn, phần thưởng ẩn cho đến khi được bật.
-- **Cá nhân hoá:** ba avatar theo sở thích thám tử manga, bóng đá, nhân vật khối; bốn màu nhấn. Ảnh gia đình do người lớn thêm sau.
+- **Cá nhân hoá:** giao diện sáng/tối, avatar tự tải JPG/PNG/WebP vào kho riêng tư. Lời nhắn người lớn mở từ bong bóng ở góc trang.
+- **Coin và XP:** Coin dùng mua đồ; XP độc lập để leo hạng. Ít nhất/làm đủ/làm thêm nhận lần lượt 5/10/15 Coin và 10/20/30 XP; hoàn thành các việc áp dụng trong ngày thêm 10 Coin/20 XP. Sửa tick điều chỉnh điểm đúng ngày; vật phẩm đã mua vẫn giữ.
+- **Shop:** 78 vật phẩm mua bằng Coin và một khung miễn phí, gồm khung, banner, danh hiệu, phong cách mừng cột mốc, linh thú và kiếm. Đồ họa tĩnh; linh thú có chuyển động. Vật phẩm cao cấp cần thêm kỷ lục streak/thành tựu.
+- **Streak:** chung và từng việc; mức ít nhất được tính. Ngày nghỉ được duyệt giữ nguyên chuỗi. Các mốc 7/10/30/60/100/180/365 và mỗi 100 ngày tiếp theo có lửa lớn, pháo hoa, hạt sáng; tôn trọng chế độ giảm chuyển động. Xin sửa một ngày bị lỡ trong 7 ngày qua, tối đa một ngày mỗi tháng, chỉ người hướng dẫn duyệt.
+- **Giải đấu:** 10 hạng, Conan và 29 nhân vật ảo có lịch XP cố định. Tuần chưa tham gia không xuống hạng; XP tuần reset, Coin và bộ sưu tập giữ lại. Thông tin giải nói rõ đối thủ được mô phỏng.
+- **Quà tháng:** mục riêng trong Shop, theo tháng dương lịch đủ điều kiện; không tiêu Coin/XP. Ba mẹ/người hướng dẫn thêm quà, xác nhận mong muốn và ghi nhận đã trao.
 - **Quản lý:** lịch theo từng thứ, mức ít nhất/làm đủ, URL học, tạo lịch mới hoặc sửa lịch tương lai có kiểm tra phiên bản, cho nghỉ một ngày, tên gọi/ảnh gia đình và phần thưởng.
 
 URL các website học hiện tại chưa được cung cấp nên để trống. Tracker ghi nhận bằng tay; nó không lấy kết quả hay khoá Roblox/Shorts từ website khác. Đọc/viết có thể thêm URL về sau; phần viết được thực hiện ở website học, không có trình soạn bài trong tracker.
@@ -40,7 +45,7 @@ Bạn cần tạo một dự án Supabase và một repository GitHub mới. Kh�
 ### 1. Tạo Supabase và cơ sở dữ liệu
 
 1. Tạo dự án riêng tại [Supabase](https://supabase.com/dashboard). Giữ mật khẩu database ở tài khoản của bạn.
-2. Mở **SQL Editor**, tạo query mới, dán và chạy toàn bộ [supabase/migrations/001_tracker.sql](supabase/migrations/001_tracker.sql). Sau đó lần lượt chạy `supabase/migrations/20261013101424_six_habits_and_plan_revisions.sql` và `supabase/migrations/20261013162134_add_desk_tidy_habit.sql`. Ba migration tạo bảng, quyền truy cập, lịch đủ bảy việc, các hàm lưu, kho ảnh riêng và Realtime; chưa có dữ liệu cá nhân hay lịch sử giả.
+2. Mở **SQL Editor**, tạo query mới, dán và chạy toàn bộ [supabase/migrations/001_tracker.sql](supabase/migrations/001_tracker.sql). Sau đó lần lượt chạy `supabase/migrations/20261013101424_six_habits_and_plan_revisions.sql` và `supabase/migrations/20261013162134_add_desk_tidy_habit.sql`. Sau cùng chạy `supabase/migrations/20261014021649_conanhabit_gamification.sql` để thêm Coin/XP, Shop, giải đấu và kho avatar. Bốn migration tạo bảng, quyền truy cập, lịch đủ bảy việc, các hàm lưu, kho ảnh riêng và Realtime; chưa có dữ liệu cá nhân hay lịch sử giả.
 3. Mở [supabase/allowlist.example.sql](supabase/allowlist.example.sql), thay **toàn bộ** email ví dụ bằng email Google thật của người hướng dẫn, Conan, ba và mẹ. Chạy bản đã sửa trong SQL Editor. Không đưa bản chứa email thật lên GitHub.
 4. Trong cài đặt API của dự án, lấy **Project URL** và **publishable key** (`sb_publishable_…`). Dự án cũ có thể dùng legacy `anon` key. Hai giá trị này dùng cho frontend; quyền truy cập thực sự do RLS và các hàm có kiểm tra vai thực thi. Xem [hướng dẫn API keys](https://supabase.com/docs/guides/api/api-keys).
 

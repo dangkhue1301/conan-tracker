@@ -10,6 +10,15 @@ import {
   weekStart,
 } from './domain'
 import { defaultHabits, defaultProfile, withTidyHabit } from './defaults'
+import {
+  emptyGameState,
+  gameState,
+  gameStats,
+  leagueBotFinalXp,
+  monthlyProgress,
+} from './gamification'
+import { itemById } from './shop-catalog'
+import type { GameAction } from './gamification-types'
 import type {
   Actor,
   Accent,
@@ -106,6 +115,7 @@ export function demoSnapshot(role: Role = 'learner', date = today()): Snapshot {
       },
     ],
     messages: [],
+    game: emptyGameState(),
     rewards: [],
     goals: [
       {
@@ -186,6 +196,10 @@ export class DemoRepository implements Repository {
       if (changed) this.storage.setItem(DEMO_KEY, JSON.stringify(value))
     }
     value.actor = demoActor(this.role)
+    value.game = gameState(value)
+    const receipt = this.storage.getItem(`${DEMO_KEY}-receipts-${this.role}`)
+    value.game.seenMilestones = receipt ? (JSON.parse(receipt).seenMilestones ?? []) : []
+    value.game.readMessageIds = receipt ? (JSON.parse(receipt).readMessageIds ?? []) : []
     return value
   }
   private write(data: Snapshot) {
@@ -196,7 +210,36 @@ export class DemoRepository implements Repository {
     if (this.role !== 'mentor') throw new Error('Chỉ người hướng dẫn được thực hiện thao tác này.')
   }
   async load() {
-    const value = structuredClone(this.data())
+    const source = this.data()
+    const league = source.game!.league
+    if (league.joinedWeek && league.joinedWeek < weekStart(this.clock())) {
+      const week = league.joinedWeek
+      const xp = gameStats(source, addDays(week, 6)).weeklyXp
+      const rank =
+        1 +
+        Array.from({ length: 29 }, (_, i) => leagueBotFinalXp(week, league.tier, i)).filter(
+          (v) => v >= xp,
+        ).length
+      const slots = [20, 15, 10, 7, 7, 7, 7, 7, 5, 0][league.tier]
+      const result =
+        xp === 0
+          ? 'stayed'
+          : rank <= slots
+            ? 'promoted'
+            : rank >= 26 && league.tier > 0
+              ? 'demoted'
+              : 'stayed'
+      if (!league.history.some((r) => r.week === week)) {
+        league.history.push({ week, tier: league.tier, rank, xp, result })
+        league.tier = Math.max(
+          0,
+          Math.min(9, league.tier + (result === 'promoted' ? 1 : result === 'demoted' ? -1 : 0)),
+        )
+      }
+      league.joinedWeek = null
+      this.write(source)
+    }
+    const value = structuredClone(source)
     if (this.role !== 'mentor') value.rewards = value.rewards.filter((r) => r.visible)
     return value
   }
@@ -366,6 +409,202 @@ export class DemoRepository implements Repository {
   async assetUrl(path: string) {
     return path
   }
+  async gameAction(action: GameAction) {
+    const data = this.data(),
+      game = data.game!,
+      date = this.clock()
+    const owner = () => {
+      if (this.role === 'parent')
+        throw new Error('Conan hoặc người hướng dẫn thực hiện thao tác này.')
+    }
+    const adult = () => {
+      if (this.role === 'learner') throw new Error('Ba mẹ hoặc người hướng dẫn duyệt quà tháng.')
+    }
+    switch (action.type) {
+      case 'buy': {
+        owner()
+        const item = itemById(action.itemId),
+          stats = gameStats(data, date)
+        if (!item) throw new Error('Vật phẩm không tồn tại.')
+        if (game.inventory.includes(item.id)) return
+        if (stats.bestStreak < item.streakRequired || stats.extraCount < item.extraRequired)
+          throw new Error('Em chưa đủ điều kiện mở vật phẩm này.')
+        if (stats.coins < item.price) throw new Error('Em chưa đủ Coin.')
+        game.spentCoins += item.price
+        game.inventory.push(item.id)
+        break
+      }
+      case 'equip': {
+        owner()
+        if (
+          action.itemId !== null &&
+          (!game.inventory.includes(action.itemId) ||
+            itemById(action.itemId)?.category !== action.category)
+        )
+          throw new Error('Em chưa sở hữu vật phẩm phù hợp.')
+        if (action.itemId === null) delete game.equipped[action.category]
+        else game.equipped[action.category] = action.itemId
+        break
+      }
+      case 'avatar':
+        owner()
+        if (action.path !== null && !/^data:image\/(jpeg|png|webp);base64,/.test(action.path))
+          throw new Error('Chọn ảnh đã tải lên.')
+        game.avatarPath = action.path
+        break
+      case 'seen':
+        game.seenMilestones = [...new Set([...game.seenMilestones, ...action.keys])].slice(-2000)
+        break
+      case 'read':
+        game.readMessageIds = [
+          ...new Set([
+            ...game.readMessageIds,
+            ...action.ids.filter((key) => data.messages.some((m) => m.id === key)),
+          ]),
+        ].slice(-2000)
+        break
+      case 'repair-request': {
+        owner()
+        if (
+          !/^\d{4}-\d{2}-\d{2}$/.test(action.date) ||
+          action.date >= date ||
+          action.date < addDays(date, -7) ||
+          !data.profile ||
+          action.date < data.profile.startedOn
+        )
+          throw new Error('Chỉ xin khôi phục ngày đã qua trong 7 ngày gần nhất.')
+        if (
+          !action.reason.trim() ||
+          !action.prevention.trim() ||
+          action.reason.length > 500 ||
+          action.prevention.length > 500
+        )
+          throw new Error('Ghi lý do và cách tránh quên, tối đa 500 ký tự mỗi mục.')
+        const habits = activeHabits(planForDate(data.plans, action.date))
+        if (
+          !habits.length ||
+          data.excuses.some((e) => e.date === action.date) ||
+          habits.every((h) =>
+            data.checkins.some(
+              (c) => c.date === action.date && c.habitId === h.id && c.status !== 'not_started',
+            ),
+          )
+        )
+          throw new Error('Ngày này không cần khôi phục.')
+        if (
+          game.repairs.some(
+            (r) => r.date.slice(0, 7) === action.date.slice(0, 7) && r.status !== 'rejected',
+          )
+        )
+          throw new Error('Tháng này đã có một lượt khôi phục hoặc đang chờ duyệt.')
+        game.repairs.push({
+          id: id(),
+          date: action.date,
+          reason: action.reason.trim(),
+          prevention: action.prevention.trim(),
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        })
+        break
+      }
+      case 'repair-review': {
+        this.mentor()
+        const repair = game.repairs.find((r) => r.id === action.id)
+        if (!repair || repair.status !== 'pending') throw new Error('Yêu cầu không còn chờ duyệt.')
+        if (
+          action.approve &&
+          game.repairs.some(
+            (r) =>
+              r.id !== repair.id &&
+              r.date.slice(0, 7) === repair.date.slice(0, 7) &&
+              r.status === 'approved',
+          )
+        )
+          throw new Error('Tháng này đã dùng lượt khôi phục.')
+        repair.status = action.approve ? 'approved' : 'rejected'
+        break
+      }
+      case 'prize-save': {
+        adult()
+        if (
+          !action.prize.id ||
+          !action.prize.title.trim() ||
+          action.prize.title.length > 100 ||
+          action.prize.description.length > 500
+        )
+          throw new Error('Thông tin quà chưa hợp lệ.')
+        game.prizeCatalog = [
+          ...game.prizeCatalog.filter((p) => p.id !== action.prize.id),
+          { ...action.prize, title: action.prize.title.trim() },
+        ]
+        break
+      }
+      case 'prize-request': {
+        owner()
+        if (
+          !/^\d{4}-\d{2}$/.test(action.month) ||
+          !monthlyProgress(data, action.month, date).eligible
+        )
+          throw new Error('Tháng này chưa đủ điều kiện nhận quà.')
+        if (!action.title.trim() || action.title.length > 150)
+          throw new Error('Tên món quà cần từ 1 đến 150 ký tự.')
+        if (game.prizeRequests.some((p) => p.month === action.month && p.status !== 'rejected'))
+          throw new Error('Tháng này đã có yêu cầu quà.')
+        game.prizeRequests.push({
+          id: id(),
+          month: action.month,
+          title: action.title.trim(),
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        })
+        break
+      }
+      case 'prize-review': {
+        adult()
+        const request = game.prizeRequests.find((p) => p.id === action.id)
+        if (
+          !request ||
+          !(
+            (request.status === 'pending' && ['approved', 'rejected'].includes(action.status)) ||
+            (request.status === 'approved' && action.status === 'delivered')
+          )
+        )
+          throw new Error('Trạng thái quà không hợp lệ.')
+        if (action.status === 'approved' && !monthlyProgress(data, request.month, date).eligible)
+          throw new Error('Tiến độ tháng đã thay đổi, chưa đủ điều kiện.')
+        request.status = action.status
+        break
+      }
+      case 'league-join':
+        owner()
+        if (game.league.joinedWeek && game.league.joinedWeek !== weekStart(date))
+          throw new Error('Hãy tải lại để tổng kết tuần trước.')
+        game.league.joinedWeek = weekStart(date)
+        break
+    }
+    if (action.type === 'seen' || action.type === 'read')
+      this.storage.setItem(
+        `${DEMO_KEY}-receipts-${this.role}`,
+        JSON.stringify({
+          seenMilestones: game.seenMilestones,
+          readMessageIds: game.readMessageIds,
+        }),
+      )
+    this.write(data)
+  }
+  async uploadAvatar(file: File) {
+    if (this.role === 'parent') throw new Error('Conan hoặc người hướng dẫn thay ảnh đại diện.')
+    validateImage(file)
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+  async avatarUrl(path: string) {
+    return path
+  }
 }
 
 export function validateImage(file: File) {
@@ -401,6 +640,8 @@ export class CloudRepository implements Repository {
       'goals',
       'rewards',
       'memberships',
+      'game_state',
+      'game_receipts',
     ])
       channel.on('postgres_changes', { event: '*', schema: 'public', table }, callback)
     channel.subscribe()
@@ -470,6 +711,27 @@ export class CloudRepository implements Repository {
   }
   async assetUrl(path: string) {
     const { data, error } = await this.db.storage.from('family-assets').createSignedUrl(path, 3600)
+    if (error) throw new Error(error.message)
+    return data.signedUrl
+  }
+  async gameAction(action: GameAction) {
+    await this.rpc('game_action', { p_action: action })
+  }
+  async uploadAvatar(file: File) {
+    validateImage(file)
+    const { data } = await this.db.auth.getUser()
+    if (!data.user) throw new Error('Hãy đăng nhập lại để thêm ảnh.')
+    const extension =
+      file.type === 'image/jpeg' ? 'jpg' : file.type === 'image/png' ? 'png' : 'webp'
+    const path = `${data.user.id}/${id()}.${extension}`
+    const { error } = await this.db.storage
+      .from('avatar-assets')
+      .upload(path, file, { contentType: file.type, upsert: false })
+    if (error) throw new Error(error.message)
+    return path
+  }
+  async avatarUrl(path: string) {
+    const { data, error } = await this.db.storage.from('avatar-assets').createSignedUrl(path, 3600)
     if (error) throw new Error(error.message)
     return data.signedUrl
   }

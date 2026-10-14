@@ -1,3 +1,5 @@
+import type { GameAction, GameState } from './gamification-types'
+
 export type Role = 'learner' | 'mentor' | 'parent'
 export type HabitId = 'anki' | 'grammar' | 'mental' | 'review' | 'reading' | 'writing' | 'tidy'
 export type CheckinStatus = 'not_started' | 'minimum' | 'done' | 'extra'
@@ -92,6 +94,7 @@ export interface Reward {
   received: boolean
 }
 export interface Snapshot {
+  game?: GameState
   actor: Actor
   profile: Profile | null
   plans: Plan[]
@@ -127,4 +130,7 @@ export interface Repository {
   saveReward(reward: Reward): Promise<void>
   upload(file: File): Promise<string>
   assetUrl(path: string): Promise<string>
+  gameAction(action: GameAction): Promise<void>
+  uploadAvatar(file: File): Promise<string>
+  avatarUrl(path: string): Promise<string>
 }
