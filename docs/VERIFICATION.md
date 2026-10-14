@@ -111,6 +111,7 @@ Công cụ trình duyệt từ chối mở localhost theo chính sách công c�
 - Playwright trên Edge xác nhận mặc định có 22 khung, lọc Blue Lock chỉ có 8 khung, Demon Slayer vẫn có 14; chọn Blue Lock từ nhóm banner tự chuyển về khung. Tìm theo chủ đề hoạt động, khung mẫu cũ vẫn ẩn. Rà cả sáng/tối ở 1366px và preview Nagi ở 390px: ảnh tải đủ, màu chữ đúng, không lỗi JavaScript hoặc tràn ngang. Reduced-motion dừng shimmer; lọc/xem thử không đổi Coin. Chỉ dùng demo, không mua trong production.
 - 129/129 kiểm thử trên 9 file đạt; format, TypeScript và build đạt. PostgreSQL xác nhận Nagi/Aiku mua/trang bị tại 40 ngày khi đủ Coin, chặn 39 ngày, retry không trừ hai lần, XP giữ nguyên; catalog server khớp frontend.
 - Migration `add_blue_lock_premium_frames` đã áp dụng trên Supabase. Truy vấn lại xác nhận 58 vật phẩm hoạt động, 22 khung gồm 8 Blue Lock đúng mọi điều kiện, 0 khung mẫu tự tạo. Migration chỉ upsert 8 SKU mới.
+
 ## Bảng xếp hạng cập nhật liên tục (14/10/2026)
 
 - 29 đối thủ mô phỏng có lịch luyện tập riêng theo tuần, ngày và từng phiên. Điểm tăng theo các nhịp 2–5 phút trong phiên; màn hình cập nhật mỗi 15 giây, cập nhật ngay khi quay lại tab và dọn timer/listener khi rời màn hình. Không gọi RPC theo mỗi nhịp giao diện.
@@ -119,4 +120,3 @@ Công cụ trình duyệt từ chối mở localhost theo chính sách công c�
 - Quy tắc mới áp dụng từ tuần 12/10/2026. Các tuần trước dùng công thức cũ, kể cả chốt muộn; lịch sử đã chốt không tính lại. Migration `20261014125829_live_league_competition.sql` chỉ thay helper riêng `conan_private.bot_xp`, giữ nguyên quyền và dữ liệu người học.
 - 136/136 kiểm thử đạt, bao gồm đối chiếu frontend/PostgreSQL cho cả 10 hạng và 29 đối thủ, chốt tuần mới một lần, hạng cao tăng XP, bắt kịp sau khi quay lại và mốc nửa đêm/cuối tuần. Format, TypeScript và build đạt. Edge kiểm tra sáng/tối ở 1.366 px, màn 390/768 px: không lỗi JavaScript, không tràn hay chồng chữ; 8 đối thủ tăng điểm riêng trong đoạn thử 30 phút và reload giữ đúng điểm.
 - Đã áp dụng migration trên Supabase và kiểm tra bằng điểm sinh từ tham số công khai: mọi hạng tăng nghiêm ngặt, mọi điểm còn đạt được, sáu điểm mẫu mùa cũ khớp. Advisor tiếp tục báo các RPC SECURITY DEFINER có chủ đích ([quy tắc RPC](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable)) và cấu hình bảo vệ mật khẩu sẵn có ([tài liệu cấu hình](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)); helper vừa thay không được xuất qua API.
-
