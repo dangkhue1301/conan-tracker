@@ -8,6 +8,10 @@ export const CATEGORY_LABELS: Record<Exclude<CosmeticCategory, 'weapon'>, string
   pet: 'Bạn đồng hành',
 }
 
+export const COLLECTION_LABELS: Record<NonNullable<ShopItem['collection']>, string> = {
+  'demon-slayer': 'Demon Slayer',
+}
+
 const themes = [
   ['flame', 'Ngọn lửa'],
   ['football', 'Sân cỏ'],
@@ -36,11 +40,12 @@ export const SHOP_ITEMS: ShopItem[] = [
   starter,
   {
     id: 'frame-mist-swordsman',
-    name: 'Khung Premium',
+    name: 'Muichiro - Premium',
     description:
       'Vòng kiếm bạc, mây và lửa ngọc bích, cùng kiếm sĩ nhỏ ở chân khung. Thiết kế theo ảnh em yêu thích.',
     category: 'frame',
     theme: 'mist',
+    collection: 'demon-slayer',
     tier: 3,
     price: 4000,
     streakRequired: 40,

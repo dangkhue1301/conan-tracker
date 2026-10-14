@@ -492,7 +492,6 @@ function BotAvatar({ seed, frameId }: { seed: number | string; frameId: string }
 }
 
 export function League({ data, repo, run, busy, currentDate }: Props) {
-  const [info, setInfo] = useState(false)
   const [clock, setClock] = useState(new Date())
   useEffect(() => {
     const timer = setInterval(() => setClock(new Date()), 60000)
@@ -521,9 +520,7 @@ export function League({ data, repo, run, busy, currentDate }: Props) {
             </p>
           </div>
         </div>
-        <Button className="secondary" onClick={() => setInfo(true)}>
-          Thông tin giải
-        </Button>
+        <span className="small-tag">Giải đấu mô phỏng</span>
       </div>
       <div className="league-path league-ranks" aria-label="Các hạng giải">
         {LEAGUES.map((name, i) => (
@@ -641,6 +638,7 @@ export function League({ data, repo, run, busy, currentDate }: Props) {
             <p className="muted">
               Giải chốt sau Chủ nhật. Tuần chưa tham gia sẽ không bị xuống hạng.
             </p>
+            {tier > 0 && <p className="muted">Năm vị trí cuối xuống một hạng.</p>}
           </section>
           {game.league.history.length > 0 && (
             <section className="card league-history">
@@ -670,29 +668,6 @@ export function League({ data, repo, run, busy, currentDate }: Props) {
           )}
         </aside>
       </div>
-      {info && (
-        <Modal title="Thông tin giải đấu" onClose={() => setInfo(false)}>
-          <div className="game-help">
-            <p>
-              Giải đấu gồm Conan và <b>29 đối thủ ảo</b> có tên, avatar và lịch tích lũy XP được tạo
-              cho trò chơi. Các nhân vật không đại diện cho người dùng thật.
-            </p>
-            <p>
-              Điểm của đối thủ tăng theo lịch cố định trong tuần. Học đều mỗi ngày giúp em có cơ hội
-              thăng hạng; làm thêm giúp em cạnh tranh các vị trí dẫn đầu.
-            </p>
-            <p>
-              Có 10 hạng từ Bronze đến Diamond. Top 20 ở Bronze, 15 ở Silver, 10 ở Gold, 7 từ
-              Sapphire đến Pearl và 5 ở Obsidian sẽ thăng hạng. Năm vị trí cuối xuống một hạng, trừ
-              Bronze.
-            </p>
-            <p>
-              XP được tính cho đúng ngày học. Bổ sung tiến độ tuần đã chốt vẫn cập nhật lịch sử và
-              tổng XP; kết quả giải đã chốt được giữ lại.
-            </p>
-          </div>
-        </Modal>
-      )}
     </div>
   )
 }

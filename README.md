@@ -30,9 +30,9 @@ npm run preview
 - **Điều em hướng tới:** tối đa hai mục tiêu với các mốc cùng xác nhận, ảnh nếu đã có, lời nhắn thật từ người lớn, phần thưởng ẩn cho đến khi được bật.
 - **Cá nhân hoá:** giao diện sáng/tối, avatar tự tải JPG/PNG/WebP vào kho riêng tư. Lời nhắn người lớn mở từ bong bóng ở góc trang.
 - **Coin và XP:** Coin dùng mua đồ; XP độc lập để leo hạng. Ít nhất/làm đủ/làm thêm nhận lần lượt 5/10/15 Coin và 10/20/30 XP; hoàn thành các việc áp dụng trong ngày thêm 10 Coin/20 XP. Sửa tick điều chỉnh điểm đúng ngày; vật phẩm đã mua vẫn giữ.
-- **Shop:** 67 vật phẩm mua bằng Coin và một khung miễn phí, gồm khung, banner, danh hiệu, phong cách mừng cột mốc và linh thú. Khung Premium theo ảnh tham chiếu giá 4.000 Coin, yêu cầu kỷ lục streak 40 ngày; không còn nhóm Kiếm & vũ khí. Đồ họa tĩnh; linh thú có chuyển động. Sáu kiểu mừng cột mốc có biểu tượng và bảng màu riêng: lửa, tia chớp, kim cương, vương miện, pha lê và sao băng.
+- **Shop:** 67 vật phẩm mua bằng Coin và một khung miễn phí, gồm khung, banner, danh hiệu, phong cách mừng cột mốc và linh thú. **Muichiro - Premium** thuộc bộ sưu tập **Demon Slayer**, giá 4.000 Coin, yêu cầu kỷ lục streak 40 ngày; tên có hiệu ứng ánh sáng riêng và Shop có bộ lọc chủ đề. Không còn nhóm Kiếm & vũ khí. Hình vật phẩm tĩnh; linh thú có chuyển động, hiệu ứng chữ tôn trọng giảm chuyển động. Sáu kiểu mừng cột mốc có biểu tượng và bảng màu riêng: lửa, tia chớp, kim cương, vương miện, pha lê và sao băng.
 - **Streak:** chung và từng việc; mức ít nhất được tính. Ngày nghỉ được duyệt giữ nguyên chuỗi. Các mốc 7/10/30/60/100/180/365 và mỗi 100 ngày tiếp theo có lửa lớn, pháo hoa, hạt sáng; tôn trọng chế độ giảm chuyển động. Xin sửa một ngày bị lỡ trong 7 ngày qua, tối đa một ngày mỗi tháng, chỉ người hướng dẫn duyệt.
-- **Giải đấu:** 10 hạng, Conan và 29 nhân vật ảo có lịch XP cố định. Tuần chưa tham gia không xuống hạng; XP tuần reset, Coin và bộ sưu tập giữ lại. Thông tin giải nói rõ đối thủ được mô phỏng.
+- **Giải đấu:** 10 hạng, Conan và 29 nhân vật ảo có lịch XP cố định. Tuần chưa tham gia không xuống hạng; XP tuần reset, Coin và bộ sưu tập giữ lại. Nhãn “Giải đấu mô phỏng” và luật tuần hiển thị ngay trên trang, không cần popup.
 - **Quà tháng:** mục riêng trong Shop, theo tháng dương lịch đủ điều kiện; không tiêu Coin/XP. Ba mẹ/người hướng dẫn thêm quà, xác nhận mong muốn và ghi nhận đã trao.
 - **Quản lý:** lịch theo từng thứ, mức ít nhất/làm đủ, URL học, tạo lịch mới hoặc sửa lịch tương lai có kiểm tra phiên bản, cho nghỉ một ngày, tên gọi/ảnh gia đình và phần thưởng.
 
@@ -139,15 +139,15 @@ Các bước trên cần dự án và tài khoản thật để xác nhận. B�
 
 Mỗi ngày có bảy việc: Anki, ngữ pháp, tính nhẩm, Ôn bài đã học, đọc sách chữ, Tập viết tiếng Việt và Dọn bàn học và sách vở. Giai đoạn 1/2 và các lịch sáu việc được giữ để đọc đúng lịch sử; việc dọn bàn chỉ tính từ ngày nâng cấp.
 
-| Việc         |           Ít nhất |            Làm đủ |
-| ------------ | ----------------: | ----------------: |
-| Anki         |    Không tách mức |           10 phút |
-| Ngữ pháp     |            20 câu |            30 câu |
-| Tính nhẩm    |            6 phút |            8 phút |
-| Đọc sách chữ |           4 trang |           5 trang |
-| Viết         |             4 câu |             6 câu |
-| Ôn bài       | 20 phút + ghi chú | 30 phút + ghi chú |
-| Dọn bàn học và sách vở | Không tách mức | 5 phút |
+| Việc                   |           Ít nhất |            Làm đủ |
+| ---------------------- | ----------------: | ----------------: |
+| Anki                   |    Không tách mức |           10 phút |
+| Ngữ pháp               |            20 câu |            30 câu |
+| Tính nhẩm              |            6 phút |            8 phút |
+| Đọc sách chữ           |           4 trang |           5 trang |
+| Viết                   |             4 câu |             6 câu |
+| Ôn bài                 | 20 phút + ghi chú | 30 phút + ghi chú |
+| Dọn bàn học và sách vở |    Không tách mức |            5 phút |
 
 Tuần tính theo giờ Việt Nam, thứ Hai–Chủ nhật. Mỗi lần làm ít nhất/làm đủ/làm thêm tính **một** lượt duy trì; làm thêm không tăng tỷ lệ trên 100%. Mẫu số là mọi lượt theo lịch **cả tuần**, từ ngày bắt đầu; ngày được nghỉ không tính. Tuần đang chạy hiển thị tiến độ tích luỹ, không xem các ngày chưa đến là bỏ sót. Mốc tham khảo là 80%, tương đương làm tròn lên số lượt cần duy trì.
 
@@ -172,7 +172,6 @@ Nên ghim trang **Hôm nay** làm bookmark hoặc trang khởi động trình du
 Sau khi chỉnh mã, dùng `npm run format` để định dạng và `npm test` / `npm run build` để kiểm tra. Workflow kiểm tra cả định dạng trước khi deploy.
 
 Đây là app cho **một Conan và một nhóm gia đình/người hướng dẫn**. Nếu sau này muốn nhiều học sinh, cần thêm family/student ID vào schema và RLS trước khi tái sử dụng cùng database. Mỗi môi trường thử nghiệm nên dùng dự án Supabase riêng.
-
 
 ## Nâng cấp bản đã có dữ liệu
 

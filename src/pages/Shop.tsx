@@ -21,12 +21,13 @@ import {
 import type { Run } from '../App'
 import type { CosmeticCategory, ShopItem } from '../gamification-types'
 import { gameState, gameStats } from '../gamification'
-import { CATEGORY_LABELS, itemById, SHOP_ITEMS } from '../shop-catalog'
+import { CATEGORY_LABELS, COLLECTION_LABELS, itemById, SHOP_ITEMS } from '../shop-catalog'
 import type { Repository, Snapshot } from '../types'
 import {
   AvatarStudio,
   CosmeticArt,
   CosmeticDialog,
+  CosmeticName,
   MilestoneCelebration,
   ProfileAvatar,
   StreakFlame,
@@ -54,6 +55,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   ice: '#67e8f9',
   moon: '#c4b5fd',
   dragon: '#f87171',
+  mist: '#2dd4bf',
 }
 type ShopCategory = Exclude<CosmeticCategory, 'weapon'>
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as ShopCategory[]
@@ -73,6 +75,7 @@ export default function Shop({
   currentDate: string
 }) {
   const [category, setCategory] = useState<ShopCategory>('frame'),
+    [collection, setCollection] = useState<ShopItem['collection'] | 'all'>('all'),
     [ownedOnly, setOwnedOnly] = useState(false),
     [query, setQuery] = useState('')
   const [selected, setSelected] = useState<ShopItem | null>(null),
@@ -88,12 +91,13 @@ export default function Shop({
       SHOP_ITEMS.filter(
         (item) =>
           item.category === category &&
+          (collection === 'all' || item.collection === collection) &&
           (!ownedOnly || game.inventory.includes(item.id)) &&
-          `${item.name} ${item.description}`
+          `${item.name} ${item.description} ${item.collection ? COLLECTION_LABELS[item.collection] : ''}`
             .toLocaleLowerCase('vi-VN')
             .includes(query.toLocaleLowerCase('vi-VN').trim()),
       ),
-    [category, ownedOnly, query, game.inventory],
+    [category, collection, ownedOnly, query, game.inventory],
   )
   const owned = selected ? game.inventory.includes(selected.id) : false
   const equipped = selected ? game.equipped[selected.category] === selected.id : false
@@ -102,7 +106,9 @@ export default function Shop({
       stats.bestStreak >= selected.streakRequired &&
       stats.extraCount >= selected.extraRequired
     : false
-  const equipment = CATEGORIES.map((key) => itemById(game.equipped[key])?.name).filter(Boolean)
+  const equipment = CATEGORIES.map((key) => itemById(game.equipped[key])).filter(
+    (item): item is ShopItem => Boolean(item),
+  )
   const dismiss = () => {
     setSelected(null)
     setConfirmation(false)
@@ -151,9 +157,19 @@ export default function Shop({
             </span>
           </div>
           <p className="shop-profile-equipment">
-            {equipment.length
-              ? `Đang dùng: ${equipment.join(' · ')}`
-              : 'Mở bộ sưu tập bên dưới để chọn trang bị đầu tiên.'}
+            {equipment.length ? (
+              <>
+                Đang dùng:{' '}
+                {equipment.map((item, index) => (
+                  <span key={item.id}>
+                    {index > 0 && ' · '}
+                    <CosmeticName item={item} />
+                  </span>
+                ))}
+              </>
+            ) : (
+              'Mở bộ sưu tập bên dưới để chọn trang bị đầu tiên.'
+            )}
           </p>
         </div>
         <div className="shop-profile-edit">
@@ -173,7 +189,16 @@ export default function Shop({
                 key={key}
                 className="shop-tab"
                 aria-pressed={category === key}
-                onClick={() => setCategory(key)}
+                onClick={() => {
+                  setCategory(key)
+                  if (
+                    collection !== 'all' &&
+                    !SHOP_ITEMS.some(
+                      (item) => item.category === key && item.collection === collection,
+                    )
+                  )
+                    setCollection('all')
+                }}
               >
                 <Icon size={17} />
                 {CATEGORY_LABELS[key]}
@@ -200,6 +225,30 @@ export default function Shop({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
+        </label>
+        <label className="shop-collection-filter">
+          <span>Bộ sưu tập / chủ đề</span>
+          <select
+            value={collection}
+            onChange={(event) => {
+              const next = event.target.value as NonNullable<ShopItem['collection']> | 'all'
+              setCollection(next)
+              if (
+                next !== 'all' &&
+                !SHOP_ITEMS.some((item) => item.category === category && item.collection === next)
+              ) {
+                const first = SHOP_ITEMS.find((item) => item.collection === next)
+                if (first && first.category !== 'weapon') setCategory(first.category)
+              }
+            }}
+          >
+            <option value="all">Tất cả chủ đề</option>
+            {Object.entries(COLLECTION_LABELS).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
         </label>
         <span>{items.length} vật phẩm · Chọn để xem thử</span>
       </div>
@@ -259,7 +308,14 @@ export default function Shop({
                   )}
                 </div>
                 <div className="shop-item-content">
-                  <strong>{item.name}</strong>
+                  {item.collection && (
+                    <span className="shop-collection-tag">
+                      {COLLECTION_LABELS[item.collection]}
+                    </span>
+                  )}
+                  <strong>
+                    <CosmeticName item={item} />
+                  </strong>
                   <p className="shop-item-description">{item.description}</p>
                   <div className="shop-item-gates">
                     {!has && item.streakRequired > 0 && (
@@ -323,6 +379,7 @@ export default function Shop({
             onClick={() => {
               setOwnedOnly(false)
               setQuery('')
+              setCollection('all')
             }}
           >
             Xem bộ sưu tập
@@ -371,7 +428,14 @@ export default function Shop({
           </div>
           <div className="shop-preview-copy">
             <div>
-              <h3>{selected.name}</h3>
+              {selected.collection && (
+                <span className="shop-collection-tag">
+                  {COLLECTION_LABELS[selected.collection]}
+                </span>
+              )}
+              <h3>
+                <CosmeticName item={selected} />
+              </h3>
               <p>{selected.description}</p>
             </div>
             <span className="shop-preview-price">

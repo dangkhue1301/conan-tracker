@@ -11,6 +11,14 @@ import './cosmetics.css'
 
 export { CelebrationSymbol, CELEBRATION_STYLES, celebrationStyle } from './celebration-symbols'
 
+export function CosmeticName({ item }: { item: ShopItem }) {
+  return (
+    <span className={item.id === 'frame-mist-swordsman' ? 'cosmetic-premium-name' : undefined}>
+      {item.name}
+    </span>
+  )
+}
+
 const PALETTES: Record<string, [string, string, string]> = {
   flame: ['#fb923c', '#ef4444', '#fde68a'],
   fire: ['#fb923c', '#ef4444', '#fde68a'],

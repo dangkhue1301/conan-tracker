@@ -13,7 +13,8 @@ import {
 import { SHOP_ITEMS } from '../src/shop-catalog'
 import { defaultHabits } from '../src/defaults'
 import { addDays } from '../src/domain'
-import { emptyGameState, gameStats } from '../src/gamification'
+import { emptyGameState, gameStats, LEAGUES } from '../src/gamification'
+import { League } from '../src/pages/GameExtras'
 import Shop from '../src/pages/Shop'
 import { DemoRepository, demoSnapshot } from '../src/repository'
 import type { Run } from '../src/App'
@@ -92,9 +93,51 @@ describe('Shop integration with persisted Coin and XP', () => {
     expect(screen.queryByRole('button', { name: 'Kiếm & vũ khí' })).toBeNull()
     expect(document.querySelector('.profile-cosmetic-weapon')).toBeNull()
     expect(
-      screen.getByRole('button', { name: 'Khung Premium, 4.000 Conan Coin' }).textContent,
+      screen.getByRole('button', { name: 'Muichiro - Premium, 4.000 Conan Coin' }).textContent,
     ).toContain('40 ngày')
     expect(data.game!.inventory).toContain('weapon-fire-1')
+  })
+  it('finds the Demon Slayer collection across categories and distinguishes its Premium name without buying', () => {
+    const data = fixture(),
+      repo = new DemoRepository('learner'),
+      action = vi.spyOn(repo, 'gameAction')
+    render(<ShopHarness initial={data} repo={repo} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Bạn đồng hành' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Bộ sưu tập / chủ đề' }), {
+      target: { value: 'demon-slayer' },
+    })
+    expect(screen.getByRole('button', { name: 'Khung avatar' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(1)
+    const premium = screen.getByRole('button', {
+      name: 'Muichiro - Premium, 4.000 Conan Coin',
+    })
+    expect(within(premium).getByText('Demon Slayer')).toBeTruthy()
+    expect(premium.querySelector('.cosmetic-premium-name')?.textContent).toBe('Muichiro - Premium')
+    expect(premium.textContent).toContain('40 ngày')
+    fireEvent.click(premium)
+    const dialog = within(screen.getByRole('dialog')),
+      name = dialog.getByRole('heading', { name: 'Muichiro - Premium' })
+    expect(name.querySelector('.cosmetic-premium-name')?.textContent).toBe('Muichiro - Premium')
+    expect(dialog.getByText('Demon Slayer')).toBeTruthy()
+    expect(dialog.getByText('4.000')).toBeTruthy()
+    expect(dialog.getByText('2 / 40 ngày')).toBeTruthy()
+    expect(
+      (dialog.getByRole('button', { name: 'Cần thêm cố gắng' }) as HTMLButtonElement).disabled,
+    ).toBe(true)
+    fireEvent.click(dialog.getByText('Đóng', { selector: 'button' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Bộ sưu tập / chủ đề' }), {
+      target: { value: 'all' },
+    })
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Tìm vật phẩm' }), {
+      target: { value: 'Demon Slayer' },
+    })
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(1)
+    expect(
+      screen.getByRole('button', { name: 'Muichiro - Premium, 4.000 Conan Coin' }),
+    ).toBeTruthy()
+    expect(action).not.toHaveBeenCalled()
   })
   it('requires confirmation, purchases once, preserves XP, then equips and removes an owned frame', async () => {
     const data = fixture(),
@@ -156,6 +199,27 @@ describe('Shop integration with persisted Coin and XP', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Hành trình bắt đầu, đang dùng' }))
     expect(screen.queryByRole('button', { name: 'Cất trang bị' })).toBeNull()
     expect(screen.getByText('Conan và người hướng dẫn có thể mua hoặc thay trang bị.')).toBeTruthy()
+  })
+})
+
+describe('league presentation', () => {
+  it('shows ten rank badges and the simulation label with inline rules instead of an information dialog', () => {
+    const data = fixture(),
+      repo = new DemoRepository('learner'),
+      run = vi.fn<Run>()
+    render(<League data={data} repo={repo} run={run} busy={false} currentDate={DATE} />)
+    expect(screen.getByText('Giải đấu mô phỏng')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Thông tin giải' })).toBeNull()
+    expect(screen.queryByRole('dialog')).toBeNull()
+    const ranks = document.querySelector('.league-path')!
+    expect(ranks.querySelectorAll('.league-rank')).toHaveLength(10)
+    for (const league of LEAGUES)
+      expect(within(ranks as HTMLElement).getByText(league)).toBeTruthy()
+    expect(ranks.querySelectorAll('svg')).toHaveLength(10)
+    expect(screen.getByRole('heading', { name: 'Mục tiêu của tuần' })).toBeTruthy()
+    expect(screen.getByText(/Top 20 thăng hạng/)).toBeTruthy()
+    expect(screen.getByText(/Tuần chưa tham gia sẽ không bị xuống hạng/)).toBeTruthy()
+    expect(run).not.toHaveBeenCalled()
   })
 })
 

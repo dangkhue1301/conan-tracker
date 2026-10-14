@@ -5,6 +5,7 @@ export interface ShopItem {
   description: string
   category: CosmeticCategory
   theme: string
+  collection?: 'demon-slayer'
   tier: number
   price: number
   streakRequired: number

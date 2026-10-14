@@ -6,14 +6,14 @@
 - `npm run build`: TypeScript và Vite tạo bản production thành công.
 - Bản build với base path `/conan-tracker/`: kiểm tra đường dẫn JS/CSS, favicon, avatar và notice để chuẩn bị GitHub Pages.
 
-| Nhóm            | Nội dung                                                                                                                                                                                       |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Nhóm            | Nội dung                                                                                                                                                                                                                |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Ngày và báo cáo | Múi giờ Việt Nam tại nửa đêm, tuần thứ Hai–Chủ nhật qua năm mới, lịch có ngày hiệu lực và bảo toàn giai đoạn lịch sử, mẫu số cả tuần, loại ngày được nghỉ, không gọi ngày tương lai là bỏ sót, làm thêm không vượt 100% |
-| Checklist       | Tick và mở lại vẫn giữ, ôn bài yêu cầu ghi chú, sửa ghi chú với phiên bản, giữ bản nháp khi tab khác sửa, từ chối ghi đè từ bản cũ, phân biệt lỗi lưu và lỗi tải lại                           |
-| Quyền           | Conan sửa trong tuần hiện tại; mentor sửa lịch sử; không tick tương lai; ba mẹ xem/gửi lời nhắn; tài khoản ngoài danh sách và anonymous bị chặn; không sửa vai hay bảng trực tiếp từ client    |
-| Quản lý         | Lịch mới chỉ từ tương lai, chống trùng ngày/ghi đè từ phiên bản cũ, giữ yêu cầu cũ, mức ít nhất không vượt mức đầy đủ, URL mới chưa tác động hôm nay, tối đa hai mục tiêu                                                               |
-| Cá nhân hoá     | Chọn avatar/màu và giữ qua lần mở lại, chỉ người lớn tải ảnh, kho ảnh private và upload theo thư mục người dùng                                                                                |
-| Khuyến khích    | Tác giả lời nhắn do server xác nhận, ba mẹ không gỡ lời người khác, phần thưởng đang ẩn không được trả về cho Conan/ba mẹ                                                                      |
+| Checklist       | Tick và mở lại vẫn giữ, ôn bài yêu cầu ghi chú, sửa ghi chú với phiên bản, giữ bản nháp khi tab khác sửa, từ chối ghi đè từ bản cũ, phân biệt lỗi lưu và lỗi tải lại                                                    |
+| Quyền           | Conan sửa trong tuần hiện tại; mentor sửa lịch sử; không tick tương lai; ba mẹ xem/gửi lời nhắn; tài khoản ngoài danh sách và anonymous bị chặn; không sửa vai hay bảng trực tiếp từ client                             |
+| Quản lý         | Lịch mới chỉ từ tương lai, chống trùng ngày/ghi đè từ phiên bản cũ, giữ yêu cầu cũ, mức ít nhất không vượt mức đầy đủ, URL mới chưa tác động hôm nay, tối đa hai mục tiêu                                               |
+| Cá nhân hoá     | Chọn avatar/màu và giữ qua lần mở lại, chỉ người lớn tải ảnh, kho ảnh private và upload theo thư mục người dùng                                                                                                         |
+| Khuyến khích    | Tác giả lời nhắn do server xác nhận, ba mẹ không gỡ lời người khác, phần thưởng đang ẩn không được trả về cho Conan/ba mẹ                                                                                               |
 
 Auth và Storage infrastructure trong test SQL được mô phỏng để kiểm tra quyền; không thay thế việc kiểm tra hệ thống Supabase thật. DOM test xác nhận các thao tác và trạng thái, không xác nhận bố cục bằng ảnh.
 
@@ -39,7 +39,6 @@ Auth và Storage infrastructure trong test SQL được mô phỏng để kiểm
 Đăng nhập trực tiếp bằng tài khoản Conan, signed URL qua Supabase Storage và Realtime giữa hai thiết bị chưa được xác nhận bằng thao tác dùng thật. Quy trình kiểm tra sau thiết lập nằm trong README.
 
 Công cụ trình duyệt từ chối mở localhost theo chính sách công cụ; việc kiểm tra giao diện ở trên dùng website công khai đã deploy. Chưa xác nhận bố cục trên điện thoại; CSS đã có bố cục responsive.
-
 
 ## Đợt sửa giao diện 13/10/2026
 
@@ -80,10 +79,12 @@ Công cụ trình duyệt từ chối mở localhost theo chính sách công c�
 - Xem thử pet xác nhận chuyển động `cosmetic-pet-bob`; khung/kiếm tĩnh. Đã tìm và sửa lỗi trùng tên lớp chủ đề flame với icon flame làm mất lớp toàn màn hình. Bổ sung kiểm thử áp dụng CSS thật để bảo đảm overlay luôn fixed và không nhận kích thước icon; 9/9 kiểm thử Shop/overlay đạt sau sửa.
 - Thao tác mua trực tiếp trong demo bị kiểm duyệt tự động chặn vì tiêu Coin và lưu giao dịch. Không thử lại qua cách khác. Mua/xác nhận/trang bị đã được kiểm thử tự động bằng DemoRepository thật và RPC trong PostgreSQL; không thực hiện mua trong tài khoản production.
 
-## Huy hiệu, cỡ chữ và Khung Premium (14/10/2026)
+## Huy hiệu, cỡ chữ và Muichiro - Premium (14/10/2026)
 
 - Thay mười icon khiên đồng dạng bằng mười huy hiệu SVG có hình và chất liệu riêng. Thay sáu ngọn lửa ăn mừng bằng sáu biểu tượng và bảng màu khác nhau. Tăng chữ chính lên 16px và chữ phụ 13–14px với system font stack.
-- Khung Premium là PNG RGBA 1254 × 1254. Đã kiểm tra alpha tâm và góc bằng 0; bản dùng trong app ở `public/cosmetics/mist-swordsman-frame.png`. Prompt/mode tạo ảnh ghi tại `docs/PREMIUM_FRAME.md`.
+- Muichiro - Premium thuộc bộ sưu tập Demon Slayer, là PNG RGBA 1254 × 1254. Đã kiểm tra alpha tâm và góc bằng 0; bản dùng trong app ở `public/cosmetics/mist-swordsman-frame.png`. Prompt/mode tạo ảnh ghi tại `docs/PREMIUM_FRAME.md`.
 - Migration bổ sung SKU Premium giá 4.000 Coin, best streak 40 ngày và bỏ catalog vũ khí. Hash check-in và game_state trước/sau khớp; không đổi số dư, trang bị, quyền hoặc lịch sử học khi cập nhật catalog.
 - Kiểm thử PostgreSQL xác nhận mua được tại mốc 40 ngày khi đủ Coin, bị chặn ở 39 ngày dù có đủ Coin, retry không trừ tiền hai lần và XP giữ nguyên. SKU vũ khí cũ bị từ chối; giao diện ẩn nhóm này và không render vũ khí từng trang bị.
 - Kiểm thử UI bổ sung sáu biểu tượng khác nhau, hiệu ứng toàn màn hình theo lựa chọn và chuyển giữa khung PNG/SVG an toàn. TypeScript, format và build đạt trước triển khai.
+- 14/14 kiểm thử trong `tests/new-ui.test.tsx` đạt sau khi bổ sung bộ lọc Demon Slayer: chọn từ nhóm linh thú tự chuyển về khung, chỉ giữ đúng Muichiro - Premium; tìm theo tên bộ sưu tập vẫn thấy khung. Card và preview có tên Premium riêng, đúng giá 4.000 Coin/streak 40 ngày, không phát sinh giao dịch khi lọc hoặc xem thử.
+- Trang giải giữ nhãn “Giải đấu mô phỏng”, mười huy hiệu hạng và luật trực tiếp trong “Mục tiêu của tuần”; nút/popup “Thông tin giải” đã bỏ. Kiểm thử UI xác nhận các phần này và không gọi hành động tham gia/mua.

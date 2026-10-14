@@ -1,10 +1,14 @@
-# Khung Premium
+# Muichiro - Premium
 
 Asset: `public/cosmetics/mist-swordsman-frame.png` (1254 × 1254, RGBA).
 
 Được chỉnh từ ảnh tham chiếu người dùng cung cấp bằng **built-in image_gen**, không dùng CLI/API key. Đã kiểm tra alpha ở tâm và góc ảnh bằng 0. Ảnh gốc được giữ nguyên tại nơi tạo; bản dùng trong app được sao chép vào repository.
 
-ID `frame-mist-swordsman`, giá **4.000 Conan Coin**, kỷ lục streak **40 ngày**. Khung là ảnh tĩnh, phần giữa trong suốt để đặt avatar người dùng vào. Nhóm Kiếm & vũ khí riêng đã được bỏ theo yêu cầu tiếp theo.
+Tên hiển thị **Muichiro - Premium**, thuộc bộ sưu tập/chủ đề **Demon Slayer**. ID `frame-mist-swordsman`, giá **4.000 Conan Coin**, kỷ lục streak **40 ngày**. Khung là ảnh tĩnh, phần giữa trong suốt để đặt avatar người dùng vào. Nhóm Kiếm & vũ khí riêng đã được bỏ theo yêu cầu tiếp theo.
+
+Tên riêng dùng gradient ngọc bích có ánh sáng chuyển động trong thẻ Shop và cửa sổ xem thử; các tên thông thường giữ kiểu chữ mặc định. Khi bật giảm chuyển động, tên vẫn có màu nhận diện nhưng không chạy hiệu ứng. Đây là hiệu ứng chữ, không làm chuyển động bản thân khung ảnh.
+
+Shop có nhãn và bộ lọc **Bộ sưu tập / chủ đề**, gồm lựa chọn **Demon Slayer**. Chọn chủ đề từ nhóm vật phẩm khác tự chuyển sang nhóm có món phù hợp. Tìm “Demon Slayer” cũng tìm được khung qua tên bộ sưu tập.
 
 ## Prompt cuối cùng
 

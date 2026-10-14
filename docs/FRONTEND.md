@@ -5,15 +5,15 @@
 - System font stack `ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Ubuntu, Noto Sans…` áp dụng cả biểu đồ. Chữ chính 16px, phụ 13–14px; Shop và các nhãn hạng được tăng tương ứng.
 - Mười hạng có SVG riêng về hình dáng và chất liệu đồng/bạc/vàng/đá quý. Hạng phía trước vẫn có màu; hạng hiện tại được viền bằng màu của chính huy hiệu. Thanh hạng cuộn trong vùng riêng trên màn hẹp.
 - Sáu kiểu mừng dùng sáu hình khác nhau và sáu bảng màu: lửa cam, chớp vàng, kim cương cyan, vương miện tím, pha lê lục bảo, sao băng hồng. Thumbnail tĩnh; hiệu ứng toàn màn hình dùng đúng hình đã chọn.
-- [Khung Premium](PREMIUM_FRAME.md) là PNG trong suốt được tạo bằng built-in imagegen từ ảnh tham chiếu. Giá 4.000 Coin và streak 40 ngày được kiểm tra trên server. Nhóm vũ khí riêng bị bỏ; dữ liệu sở hữu cũ được giữ để bảo toàn lịch sử, nhưng không hiển thị hoặc cho mua/trang bị thêm.
+- [Muichiro - Premium](PREMIUM_FRAME.md), thuộc chủ đề **Demon Slayer**, là PNG trong suốt được tạo bằng built-in imagegen từ ảnh tham chiếu. Giá 4.000 Coin và streak 40 ngày được kiểm tra trên server. Shop có nhãn, bộ lọc chủ đề và tìm kiếm theo tên bộ sưu tập. Tên riêng có gradient ngọc bích và ánh sáng chuyển động ở thẻ/xem thử, dừng khi bật giảm chuyển động; bản thân khung vẫn tĩnh. Nhóm vũ khí riêng bị bỏ; dữ liệu sở hữu cũ được giữ để bảo toàn lịch sử, nhưng không hiển thị hoặc cho mua/trang bị thêm.
 
 ## ConanHabit (14/10/2026)
 
 Thiết kế hiện tại dùng màu và bố cục từ bản TSX tham chiếu của người dùng: bốn thẻ tổng quan, bảng tuần đầy đủ bảy việc và hai biểu đồ phía dưới. `conanhabit.css` bổ sung theme sáng/tối trên token của evondevKit; lịch sử và phân quyền tiếp tục dùng các component có sẵn. Các URL lấy từ lịch đã có hiệu lực ở ngày đang xem.
 
-Avatar hiện tại do người dùng tải lên, không dùng bộ ảnh mẫu bên dưới để lựa chọn. Khung, vũ khí, pet và đồ họa Shop là SVG nguyên bản trong `cosmetics.tsx`. Theo yêu cầu mới, các món trong Shop tĩnh; linh thú có chuyển động nhẹ. Lửa streak và pháo hoa/hạt sáng khi đạt cột mốc vẫn động, có đường dẫn giảm chuyển động bằng CSS. Khung cấp cao có thêm hình dáng, huy hiệu và chi tiết, không chỉ đổi màu.
+Avatar hiện tại do người dùng tải lên, không dùng bộ ảnh mẫu bên dưới để lựa chọn. Phần lớn khung, pet và đồ họa Shop là SVG nguyên bản trong `cosmetics.tsx`; Muichiro - Premium dùng PNG trong suốt. Theo yêu cầu mới, hình vật phẩm trong Shop tĩnh; linh thú có chuyển động nhẹ và riêng tên Muichiro - Premium có hiệu ứng ánh sáng. Lửa streak và pháo hoa/hạt sáng khi đạt cột mốc vẫn động, có đường dẫn giảm chuyển động bằng CSS. Khung cấp cao có thêm hình dáng, huy hiệu và chi tiết, không chỉ đổi màu.
 
-Coin là tiền nội bộ dùng mua vật phẩm, không kết nối tiền thật hay Robux của Roblox. XP độc lập dùng leo hạng. Đối thủ giải là nhân vật hư cấu, thể hiện trong “Thông tin giải”; avatar và khung được tạo bằng mã trong app, không lấy ảnh trẻ em thật.
+Coin là tiền nội bộ dùng mua vật phẩm, không kết nối tiền thật hay Robux của Roblox. XP độc lập dùng leo hạng. Đối thủ giải là nhân vật hư cấu, thể hiện bằng nhãn “Giải đấu mô phỏng” ngay đầu trang. Luật tuần hiển thị trong thẻ “Mục tiêu của tuần”, không có nút hoặc popup “Thông tin giải”. Avatar và khung đối thủ được tạo bằng mã trong app, không lấy ảnh trẻ em thật.
 
 ## Dựa trên evondevKit
 
@@ -32,10 +32,10 @@ Thông báo bản quyền và MIT license giữ ở `THIRD_PARTY_NOTICES.md`; b�
 
 Ba ảnh gốc được tạo bằng built-in ImageGen trong phiên làm việc ngày 12/10/2026. Không dùng CLI hay API key. Đây là nhân vật nguyên bản theo sở thích của Conan; không sao chép nhân vật anime hoặc thương hiệu Roblox.
 
-| File | Prompt / hướng tạo |
-| --- | --- |
+| File                           | Prompt / hướng tạo                                                                                                                                                                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `public/avatars/detective.png` | Original friendly teenage boy manga avatar, dark tousled hair and glasses, navy/teal jacket, head and shoulders centered in a pale teal circle, confident and calm, suitable for a 14-year-old, no text/logo/existing franchise character. |
-| `public/avatars/football.png` | Matching manga avatar of an original teenage football player with dark hair, navy/teal jersey and a football, centered head and shoulders, pale teal circle, clean and friendly, no text, team logos or existing character. |
-| `public/avatars/builder.png` | Original polished 3D block character avatar with dark hair and navy/teal hoodie, sandbox building game inspiration, centered on a pale teal circle, friendly and suitable for a teenager, no text, logos or existing franchise character. |
+| `public/avatars/football.png`  | Matching manga avatar of an original teenage football player with dark hair, navy/teal jersey and a football, centered head and shoulders, pale teal circle, clean and friendly, no text, team logos or existing character.                |
+| `public/avatars/builder.png`   | Original polished 3D block character avatar with dark hair and navy/teal hoodie, sandbox building game inspiration, centered on a pale teal circle, friendly and suitable for a teenager, no text, logos or existing franchise character.  |
 
 Ảnh gia đình, ảnh mục tiêu và ảnh phần thưởng để trống cho đến khi người lớn cung cấp. Các ảnh thật được tải vào Storage private, không nằm trong thư mục `public` hay repository.
