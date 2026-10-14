@@ -11,6 +11,7 @@ import { DemoRepository, demoSnapshot } from '../src/repository'
 import type { Run } from '../src/App'
 import type { Role, Snapshot } from '../src/types'
 import { Modal } from '../src/ui'
+import { readFileSync } from 'node:fs'
 
 const DATE = '2026-10-14'
 const STORAGE = 'conan-tracker-demo-v1'
@@ -203,6 +204,27 @@ describe('uploaded avatars', () => {
 })
 
 describe('accessible overlay lifecycle', () => {
+  it('keeps the flame-themed celebration fixed over the viewport instead of inheriting the icon geometry', () => {
+    const stylesheet = document.createElement('style')
+    stylesheet.textContent = readFileSync('src/cosmetics.css', 'utf8')
+    document.head.append(stylesheet)
+    try {
+      render(
+        <MilestoneCelebration
+          milestones={[{ key: 'global:10', label: 'Chuỗi thói quen', count: 10 }]}
+          onClose={() => {}}
+        />,
+      )
+      const overlay = screen.getByRole('dialog', { name: '10 ngày bền bỉ!' })
+      expect(getComputedStyle(overlay).position).toBe('fixed')
+      expect(getComputedStyle(overlay).width).not.toBe('230px')
+      expect(getComputedStyle(overlay.querySelector('.celebration-flame')!).position).toBe(
+        'relative',
+      )
+    } finally {
+      stylesheet.remove()
+    }
+  })
   it('closes only the top dialog on Escape and restores scrolling after both dialogs close', async () => {
     const bottomClose = vi.fn(),
       topClose = vi.fn()

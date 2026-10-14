@@ -1736,3 +1736,59 @@ html[data-theme='dark'] .demo-banner select {
     width: 100%;
   }
 }
+@media (max-width: 760px) {
+  .league-sidebar {
+    order: -1;
+  }
+  .habit-week-table {
+    min-width: 900px;
+  }
+  .habit-week-table .habit-name-col {
+    width: 200px;
+  }
+  .habit-week-table tbody th,
+  .habit-week-table thead th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--surface);
+    padding-left: 16px;
+    box-shadow: 3px 0 4px rgb(20 25 60 / 0.025);
+  }
+  .board-habit-name {
+    gap: 9px;
+  }
+  .board-habit-name > div > span,
+  .board-habit-name a {
+    font-size: 12px;
+  }
+  .board-habit-name small {
+    font-size: 10px;
+  }
+  .habit-symbol {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+    border-radius: 10px;
+  }
+  .habit-symbol svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+.shop-item-card .cosmetic-static .streak-flame * {
+  animation: none !important;
+}
+@media (max-width: 480px) {
+  .header-actions .icon-button {
+    width: 44px;
+    min-width: 44px;
+  }
+  .header-actions .profile-trigger {
+    width: 48px;
+    min-width: 48px;
+  }
+  .header-inner {
+    column-gap: 8px;
+  }
+}

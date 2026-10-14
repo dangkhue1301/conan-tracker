@@ -775,7 +775,7 @@ export function MilestoneCelebration({
   return (
     <div
       ref={root}
-      className={`milestone-celebration celebration-${theme}`}
+      className={`milestone-celebration celebration-theme-${theme}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="milestone-celebration-title"

@@ -986,25 +986,25 @@
 .celebration-firework > i:nth-child(2n) {
   background: #fef08a;
 }
-.celebration-football .celebration-stars > i {
+.celebration-theme-football .celebration-stars > i {
   border: 1px solid #064e3b;
   background: #a7f3d0;
 }
-.celebration-builder .celebration-stars > i,
-.celebration-builder .celebration-firework > i {
+.celebration-theme-builder .celebration-stars > i,
+.celebration-theme-builder .celebration-firework > i {
   border-radius: 0;
 }
-.celebration-manga .celebration-stars > i {
+.celebration-theme-manga .celebration-stars > i {
   clip-path: polygon(50% 0, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0 50%, 35% 35%);
   width: 12px;
   height: 12px;
 }
-.celebration-detective .celebration-firework > i {
+.celebration-theme-detective .celebration-firework > i {
   width: 3px;
   height: 14px;
   border-radius: 2px;
 }
-.celebration-space .celebration-stars > i {
+.celebration-theme-space .celebration-stars > i {
   box-shadow: 0 0 18px #c4b5fd;
 }
 @keyframes cosmetic-fire {

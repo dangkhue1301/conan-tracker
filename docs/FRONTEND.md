@@ -1,5 +1,13 @@
 # Frontend và tài nguyên
 
+## ConanHabit (14/10/2026)
+
+Thiết kế hiện tại dùng màu và bố cục từ bản TSX tham chiếu của người dùng: bốn thẻ tổng quan, bảng tuần đầy đủ bảy việc và hai biểu đồ phía dưới. `conanhabit.css` bổ sung theme sáng/tối trên token của evondevKit; lịch sử và phân quyền tiếp tục dùng các component có sẵn. Các URL lấy từ lịch đã có hiệu lực ở ngày đang xem.
+
+Avatar hiện tại do người dùng tải lên, không dùng bộ ảnh mẫu bên dưới để lựa chọn. Khung, vũ khí, pet và đồ họa Shop là SVG nguyên bản trong `cosmetics.tsx`. Theo yêu cầu mới, các món trong Shop tĩnh; linh thú có chuyển động nhẹ. Lửa streak và pháo hoa/hạt sáng khi đạt cột mốc vẫn động, có đường dẫn giảm chuyển động bằng CSS. Khung cấp cao có thêm hình dáng, huy hiệu và chi tiết, không chỉ đổi màu.
+
+Coin là tiền nội bộ dùng mua vật phẩm, không kết nối tiền thật hay Robux của Roblox. XP độc lập dùng leo hạng. Đối thủ giải là nhân vật hư cấu, thể hiện trong “Thông tin giải”; avatar và khung được tạo bằng mã trong app, không lấy ảnh trẻ em thật.
+
 ## Dựa trên evondevKit
 
 Nguồn: [evondev/evondevKit](https://github.com/evondev/evondevKit), nhánh `master`, đọc ngày 12/10/2026. Đây là bộ hướng dẫn UI/UX, không phải template app React sẵn có. App dùng hướng flat: nền xám nhạt, khối trắng, viền mảnh, bo khoảng 12px; chữ và khoảng cách tạo thứ bậc. Bóng chỉ dùng ở menu, modal và toast.
