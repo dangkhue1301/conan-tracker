@@ -1674,3 +1674,65 @@ html[data-theme='dark'] .section-heading p {
     width: 48px;
   }
 }
+.message-bubble:not(.has-unread) {
+  width: 54px;
+  height: 54px;
+  padding: 10px;
+  border-radius: 50%;
+}
+.message-bubble:not(.has-unread) > span:nth-child(2) {
+  display: none;
+}
+html[data-theme='dark'] .demo-banner {
+  background: var(--surface-soft);
+  border-color: var(--line);
+  color: var(--muted);
+}
+html[data-theme='dark'] .demo-banner select {
+  background: var(--surface);
+  color: var(--foreground);
+}
+.bot-avatar {
+  position: relative;
+  border: 0;
+  padding: 0;
+  width: 58px;
+  height: 58px;
+  border-radius: 0;
+  background: transparent;
+}
+.bot-avatar > svg:first-child {
+  position: absolute;
+  width: 59%;
+  height: 59%;
+  inset: 20.5%;
+  z-index: 1;
+}
+.bot-avatar > .cosmetic-frame-art {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+  z-index: 2;
+}
+.podium-place > .profile-cosmetic {
+  width: 70px;
+}
+.podium-1 > .profile-cosmetic {
+  width: 88px;
+}
+.podium-place .cosmetic-nameplate {
+  display: none;
+}
+@media (max-width: 620px) {
+  .shop-header {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .shop-header > div:first-child {
+    width: 100%;
+  }
+  .shop-wallet {
+    width: 100%;
+  }
+}

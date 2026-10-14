@@ -115,7 +115,7 @@ export function CosmeticDialog({
   )
 }
 
-function FrameArtwork({ item }: { item: ShopItem }) {
+export function FrameArtwork({ item }: { item: ShopItem }) {
   const uid = useId().replaceAll(':', ''),
     [a, b, c] = palette(item.theme)
   const tier = item.id === 'frame-starter' ? 0 : item.tier + 1

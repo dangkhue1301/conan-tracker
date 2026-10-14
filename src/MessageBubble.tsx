@@ -35,6 +35,11 @@ export default function MessageBubble({
         className={`message-bubble ${unread.length ? 'has-unread' : ''}`}
         onClick={show}
         aria-label={`Lời nhắn dành cho em${unread.length ? `, ${unread.length} lời nhắn mới` : ''}`}
+        title={
+          unread.length
+            ? `Lời nhắn mới từ ${unread[0].authorName}`
+            : 'Lời nhắn từ ba mẹ và anh Khuê'
+        }
       >
         <span className="bubble-heart">
           <MessageCircle size={21} />

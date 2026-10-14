@@ -24,7 +24,12 @@ import {
   promotionSlots,
 } from '../gamification'
 import { Button, Modal } from '../ui'
-import { ProfileAvatar } from '../cosmetics'
+import { FrameArtwork, ProfileAvatar } from '../cosmetics'
+import { itemById } from '../shop-catalog'
+
+const regionNames = new Intl.DisplayNames(['vi'], { type: 'region' })
+const countryLabel = (code: string) =>
+  `${String.fromCodePoint(...[...code].map((c) => c.charCodeAt(0) + 127397))} ${regionNames.of(code) ?? code}`
 
 interface Props {
   data: Snapshot
@@ -448,6 +453,7 @@ function BotAvatar({ seed, frameId }: { seed: number | string; frameId: string }
           .reduce((a, c) => a + c.charCodeAt(0), 0)
   const skin = ['#ffd7b5', '#e4aa7c', '#bf825b', '#8e573e'][n % 4],
     shirt = ['#8b5cf6', '#10b981', '#3b82f6', '#f59e0b', '#ec4899'][n % 5]
+  const frame = itemById(frameId)
   return (
     <span className={`bot-avatar bot-frame-${n % 5}`} title={`Khung ${frameId}`}>
       <svg viewBox="0 0 64 64" role="img" aria-label="Avatar nhân vật">
@@ -479,6 +485,7 @@ function BotAvatar({ seed, frameId }: { seed: number | string; frameId: string }
           </g>
         )}
       </svg>
+      {frame && <FrameArtwork item={frame} />}
     </span>
   )
 }
@@ -566,7 +573,7 @@ export function League({ data, repo, run, busy, currentDate }: Props) {
                     {e.name}
                     {e.isConan && <span>Em</span>}
                   </strong>
-                  <small>{e.country}</small>
+                  <small>{countryLabel(e.country)}</small>
                 </div>
                 <span className="league-xp">
                   {e.xp.toLocaleString('vi-VN')} <small>XP</small>
