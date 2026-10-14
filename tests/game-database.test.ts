@@ -3,7 +3,7 @@ import { PGlite } from '@electric-sql/pglite'
 import { readFile, readdir } from 'node:fs/promises'
 import { defaultHabits, defaultProfile } from '../src/defaults'
 import { gameStats, leagueBotFinalXp, monthlyProgress } from '../src/gamification'
-import { SHOP_ITEMS } from '../src/shop-catalog'
+import { ARCHIVED_AVATAR_FRAMES, SHOP_ITEMS } from '../src/shop-catalog'
 import type { GameAction } from '../src/gamification-types'
 import type { Role, Snapshot } from '../src/types'
 
@@ -120,6 +120,33 @@ describe('ConanHabit authoritative wallet and catalog', () => {
     expect(after.game!.spentCoins).toBe(before.game!.spentCoins)
     expect(after.game!.inventory).toEqual(before.game!.inventory)
   })
+  it('retires generated frames idempotently without clearing old purchases, equipment or progress', async () => {
+    await seedDays('2026-10-12', '2026-10-13')
+    await db.exec(`reset role;
+      update game_state set data=jsonb_set(jsonb_set(jsonb_set(data,'{inventory}',
+      '["frame-starter","frame-flame-2"]'::jsonb),'{equipped,frame}','"frame-flame-2"'::jsonb),
+      '{spentCoins}','500'::jsonb);`)
+    await login('learner')
+    const before = await snapshot()
+    const migration = (await readdir(new URL('../supabase/migrations/', import.meta.url))).find(
+      (name) => name.endsWith('_temporarily_remove_generated_avatar_frames.sql'),
+    )!
+    await db.exec('reset role;')
+    await db.exec(
+      await readFile(new URL(`../supabase/migrations/${migration}`, import.meta.url), 'utf8'),
+    )
+    await login('learner')
+    for (const frame of ARCHIVED_AVATAR_FRAMES) {
+      await expect(action({ type: 'buy', itemId: frame.id })).rejects.toThrow('không tồn tại')
+      await expect(action({ type: 'equip', category: 'frame', itemId: frame.id })).rejects.toThrow(
+        'phù hợp',
+      )
+    }
+    const after = await snapshot()
+    expect(after.game).toEqual(before.game)
+    expect(after.checkins).toEqual(before.checkins)
+    expect(gameStats(after, day).xp).toBe(gameStats(before, day).xp)
+  })
   it('seeds exactly the reviewed catalog and preserves legacy snapshot/auth contracts', async () => {
     const data = await snapshot()
     expect(data.game!.inventory).toEqual(['frame-starter'])
@@ -158,30 +185,32 @@ describe('ConanHabit authoritative wallet and catalog', () => {
     await login('learner')
     const before = await snapshot()
     await Promise.all([
-      action({ type: 'buy', itemId: 'frame-flame-1', price: 0 }),
-      action({ type: 'buy', itemId: 'frame-flame-1' }),
+      action({ type: 'buy', itemId: 'title-flame-1', price: 0 }),
+      action({ type: 'buy', itemId: 'title-flame-1' }),
     ])
     const after = await snapshot()
     expect(after.game!.spentCoins).toBe(100)
-    expect(after.game!.inventory.filter((i) => i === 'frame-flame-1')).toHaveLength(1)
+    expect(after.game!.inventory.filter((i) => i === 'title-flame-1')).toHaveLength(1)
     expect(gameStats(after, day).xp).toBe(gameStats(before, day).xp)
     expect(gameStats(after, day).coins).toBe(gameStats(before, day).coins - 100)
-    await action({ type: 'equip', category: 'frame', itemId: 'frame-flame-1' })
-    expect((await snapshot()).game!.equipped.frame).toBe('frame-flame-1')
+    await action({ type: 'equip', category: 'title', itemId: 'title-flame-1' })
+    expect((await snapshot()).game!.equipped.title).toBe('title-flame-1')
     await expect(
-      action({ type: 'equip', category: 'pet', itemId: 'frame-flame-1' }),
+      action({ type: 'equip', category: 'pet', itemId: 'title-flame-1' }),
     ).rejects.toThrow('phù hợp')
   })
-  it('checks insufficient funds and streak/extra gates on server, retaining owned inventory after undo', async () => {
-    await expect(action({ type: 'buy', itemId: 'frame-flame-1' })).rejects.toThrow('Coin')
+  it('checks insufficient funds and streak gates on server, retaining owned inventory after undo', async () => {
+    await expect(action({ type: 'buy', itemId: 'title-flame-1' })).rejects.toThrow('Coin')
     await seedDays('2026-10-01', '2026-10-13', 'extra')
-    await action({ type: 'buy', itemId: 'frame-flame-2' })
-    await expect(action({ type: 'buy', itemId: 'frame-flame-3' })).rejects.toThrow('điều kiện')
+    await action({ type: 'buy', itemId: 'title-flame-2' })
+    await expect(action({ type: 'buy', itemId: 'frame-mist-swordsman' })).rejects.toThrow(
+      'điều kiện',
+    )
     await db.exec('reset role; delete from checkins;')
     await login('mentor')
     const data = await snapshot()
-    expect(data.game!.spentCoins).toBe(500)
-    expect(data.game!.inventory).toContain('frame-flame-2')
+    expect(data.game!.spentCoins).toBe(600)
+    expect(data.game!.inventory).toContain('title-flame-2')
     expect(gameStats(data, day).coins).toBe(0)
     await seedDays('2026-10-12', '2026-10-13')
     expect(gameStats(await snapshot(), day).coins).toBe(0)

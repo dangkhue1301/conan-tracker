@@ -12,7 +12,7 @@ import {
   promotionSlots,
   streakMilestones,
 } from '../src/gamification'
-import { CATEGORY_LABELS, itemById, SHOP_ITEMS } from '../src/shop-catalog'
+import { ARCHIVED_AVATAR_FRAMES, CATEGORY_LABELS, itemById, SHOP_ITEMS } from '../src/shop-catalog'
 import type { GameState } from '../src/gamification-types'
 import type { CheckinStatus, HabitId, Snapshot } from '../src/types'
 
@@ -313,23 +313,27 @@ describe('permanent milestones and catalog', () => {
     expect(streakMilestones(data, addDays(date, 10))).toEqual([])
   })
 
-  it('ships 80 unique purchases plus one free frame in five active categories', () => {
-    expect(SHOP_ITEMS).toHaveLength(81)
-    expect(new Set(SHOP_ITEMS.map((item) => item.id)).size).toBe(81)
-    expect(SHOP_ITEMS.filter((item) => item.price > 0)).toHaveLength(80)
+  it('keeps 50 active purchases and archives all 31 generated avatar frames', () => {
+    expect(SHOP_ITEMS).toHaveLength(50)
+    expect(new Set(SHOP_ITEMS.map((item) => item.id)).size).toBe(50)
+    expect(SHOP_ITEMS.filter((item) => item.price > 0)).toHaveLength(50)
     expect(Object.keys(CATEGORY_LABELS)).toHaveLength(5)
-    expect(SHOP_ITEMS.filter((item) => item.category === 'frame')).toHaveLength(45)
+    expect(SHOP_ITEMS.filter((item) => item.category === 'frame')).toHaveLength(14)
     expect(itemById('frame-mist-swordsman')).toMatchObject({
       price: 4000,
       streakRequired: 40,
       theme: 'mist',
     })
-    expect(itemById('frame-flame-5')).toMatchObject({
+    expect(ARCHIVED_AVATAR_FRAMES).toHaveLength(31)
+    for (const frame of ARCHIVED_AVATAR_FRAMES) expect(itemById(frame.id)).toBeUndefined()
+    expect(ARCHIVED_AVATAR_FRAMES.find((item) => item.id === 'frame-flame-5')).toMatchObject({
       price: 8500,
       streakRequired: 100,
       extraRequired: 50,
     })
-    expect(itemById('frame-starter')).toMatchObject({ price: 0 })
+    expect(ARCHIVED_AVATAR_FRAMES.find((item) => item.id === 'frame-starter')).toMatchObject({
+      price: 0,
+    })
     expect(itemById('weapon-fire-1')).toBeUndefined()
     expect(itemById(undefined)).toBeUndefined()
     expect(itemById('unknown')).toBeUndefined()

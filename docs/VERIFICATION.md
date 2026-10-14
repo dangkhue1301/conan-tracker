@@ -97,3 +97,9 @@ Công cụ trình duyệt từ chối mở localhost theo chính sách công c�
 - Đã rà bộ lọc Demon Slayer ở 1366px trên giao diện sáng/tối và cửa sổ xem thử Gyomei ở 390px, không tràn ngang trang. Chỉ dùng demo trên máy, không thực hiện mua trong tài khoản thật. Kết quả và ảnh QA lưu cục bộ dưới `qa/`, không đưa vào repository.
 - 122/122 kiểm thử trên 9 file đạt; format, TypeScript và build đạt. Kiểm thử PostgreSQL so khớp toàn bộ catalog với frontend, xác nhận Muichiro/Gyomei/Kokushibo mua và trang bị được tại mốc 40 ngày khi đủ Coin, bị chặn ở 39 ngày, retry không trừ Coin hai lần và XP giữ nguyên.
 - Migration `add_demon_slayer_premium_frames` đã áp dụng lên Supabase; truy vấn lại xác nhận 13 SKU mới cùng Muichiro có giá 4.000 Coin, streak 40 ngày, extra 0. SQL chỉ upsert catalog, không cập nhật ví, inventory hoặc lịch sử.
+
+## Tạm gỡ khung avatar mẫu tự thiết kế (14/10/2026)
+
+- 31 khung mẫu, gồm `frame-starter` và 30 khung theo sáu chủ đề, đã được loại khỏi catalog đang dùng. Định nghĩa giữ trong `ARCHIVED_AVATAR_FRAMES`; `itemById` không trả về các SKU này nên Shop, avatar và giải đấu không render khung cũ. Bộ 14 khung Demon Slayer - Premium giữ nguyên.
+- Migration `temporarily_remove_generated_avatar_frames` chỉ xóa đúng 31 SKU mẫu khỏi `cosmetic_catalog`, không ghi vào ví, inventory, trang bị hay lịch sử học. Supabase xác nhận còn 14 khung, 12 banner, 12 danh hiệu, 6 hiệu ứng và 6 linh thú. Có thể khôi phục catalog từ các định nghĩa được giữ.
+- 124/124 kiểm thử trên 9 file đạt, format/TypeScript/build đạt. PostgreSQL kiểm tra migration chạy lại không đổi lịch sử, Coin đã tiêu hoặc trang bị đã lưu; mọi SKU mẫu đều bị từ chối khi mua/trang bị. UI kiểm tra chỉ còn 14 khung, không render khung cũ đã sở hữu, lọc bộ sưu tập và xem thử không tạo giao dịch. Kiểm thử mua chung chuyển sang danh hiệu còn hoạt động.

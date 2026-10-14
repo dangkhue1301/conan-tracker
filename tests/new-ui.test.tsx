@@ -172,13 +172,14 @@ describe('Shop integration with persisted Coin and XP', () => {
     ).toContain('cosmetics/demon-slayer/gyomei-frame.png')
     expect(action).not.toHaveBeenCalled()
   })
-  it('requires confirmation, purchases once, preserves XP, then equips and removes an owned frame', async () => {
+  it('requires confirmation, purchases once, preserves XP, then equips and removes an owned title', async () => {
     const data = fixture(),
       repo = new DemoRepository('learner', localStorage, () => DATE)
     const before = gameStats(data, DATE),
       buy = vi.spyOn(repo, 'gameAction')
     render(<ShopHarness initial={data} repo={repo} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Ngọn lửa · Khởi đầu, 100 Conan Coin' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Danh hiệu', exact: true }))
+    fireEvent.click(screen.getByRole('button', { name: 'Tân binh ngọn lửa, 100 Conan Coin' }))
     fireEvent.click(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Mua bằng Coin' }),
     )
@@ -190,7 +191,7 @@ describe('Shop integration with persisted Coin and XP', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Xác nhận mua' }))
     await screen.findByRole('button', { name: 'Dùng ngay' })
     const purchased = await repo.load()
-    expect(purchased.game!.inventory).toContain('frame-flame-1')
+    expect(purchased.game!.inventory).toContain('title-flame-1')
     expect(gameStats(purchased, DATE)).toMatchObject({
       coins: before.coins - 100,
       xp: before.xp,
@@ -199,25 +200,26 @@ describe('Shop integration with persisted Coin and XP', () => {
     expect(buy.mock.calls.filter(([action]) => action.type === 'buy')).toHaveLength(1)
     fireEvent.click(screen.getByRole('button', { name: 'Dùng ngay' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    expect((await repo.load()).game!.equipped.frame).toBe('frame-flame-1')
-    fireEvent.click(screen.getByRole('button', { name: 'Ngọn lửa · Khởi đầu, đang dùng' }))
+    expect((await repo.load()).game!.equipped.title).toBe('title-flame-1')
+    fireEvent.click(screen.getByRole('button', { name: 'Tân binh ngọn lửa, đang dùng' }))
     fireEvent.click(screen.getByRole('button', { name: 'Cất trang bị' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     const unequipped = await repo.load()
-    expect(unequipped.game!.equipped.frame).toBeUndefined()
-    expect(unequipped.game!.inventory).toContain('frame-flame-1')
+    expect(unequipped.game!.equipped.title).toBeUndefined()
+    expect(unequipped.game!.inventory).toContain('title-flame-1')
     expect(gameStats(unequipped, DATE).xp).toBe(before.xp)
   })
 
   it('shows the streak requirement and prevents purchase despite sufficient Coin', () => {
     const data = fixture('learner', true),
       repo = new DemoRepository('learner', localStorage, () => DATE)
-    expect(gameStats(data, DATE).coins).toBeGreaterThan(500)
+    expect(gameStats(data, DATE).coins).toBeGreaterThan(600)
     render(<ShopHarness initial={data} repo={repo} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Ngọn lửa · Chiến binh, 500 Conan Coin' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Danh hiệu', exact: true }))
+    fireEvent.click(screen.getByRole('button', { name: 'Bậc thầy ngọn lửa, 600 Conan Coin' }))
     const dialog = within(screen.getByRole('dialog'))
     expect(dialog.getByText('Kỷ lục streak toàn bộ thói quen')).toBeTruthy()
-    expect(dialog.getByText('1 / 10 ngày')).toBeTruthy()
+    expect(dialog.getByText('1 / 7 ngày')).toBeTruthy()
     expect(
       (dialog.getByRole('button', { name: 'Cần thêm cố gắng' }) as HTMLButtonElement).disabled,
     ).toBe(true)
@@ -226,12 +228,31 @@ describe('Shop integration with persisted Coin and XP', () => {
   it('keeps parent views read-only and finds only owned items after filtering', () => {
     const data = fixture('parent'),
       repo = new DemoRepository('parent', localStorage, () => DATE)
+    data.game!.inventory.push('frame-gyomei')
+    data.game!.equipped.frame = 'frame-gyomei'
     render(<ShopHarness initial={data} repo={repo} />)
     fireEvent.click(screen.getByRole('checkbox', { name: 'Bộ sưu tập đã có' }))
-    expect(screen.queryByRole('button', { name: /Ngọn lửa · Khởi đầu,/ })).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: 'Hành trình bắt đầu, đang dùng' }))
+    expect(screen.queryByRole('button', { name: /Muichiro - Premium,/ })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Gyomei - Premium, đang dùng' }))
     expect(screen.queryByRole('button', { name: 'Cất trang bị' })).toBeNull()
     expect(screen.getByText('Conan và người hướng dẫn có thể mua hoặc thay trang bị.')).toBeTruthy()
+  })
+  it('temporarily removes sample frames from Shop and avatars while retaining their saved ownership', () => {
+    const data = fixture(),
+      repo = new DemoRepository('learner'),
+      action = vi.spyOn(repo, 'gameAction')
+    data.game!.inventory.push('frame-flame-2')
+    data.game!.equipped.frame = 'frame-flame-2'
+    const saved = structuredClone(data.game)
+    render(<ShopHarness initial={data} repo={repo} />)
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(14)
+    expect(document.querySelector('svg.cosmetic-frame-art')).toBeNull()
+    expect(screen.queryByText('Hành trình bắt đầu')).toBeNull()
+    expect(screen.queryByText('Ngọn lửa · Chiến binh')).toBeNull()
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Bộ sưu tập đã có' }))
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(0)
+    expect(data.game).toEqual(saved)
+    expect(action).not.toHaveBeenCalled()
   })
 })
 
@@ -353,7 +374,7 @@ describe('accessible overlay lifecycle', () => {
       within(screen.getByRole('dialog')).getByRole('img', { name: 'Vương miện tím' }),
     ).toBeTruthy()
   })
-  it('previews the transparent reference frame and safely switches between it and SVG frames', () => {
+  it('previews the reference frame and hides an archived frame while switching safely', () => {
     const data = fixture(),
       repo = new DemoRepository('learner')
     const view = render(
@@ -364,6 +385,7 @@ describe('accessible overlay lifecycle', () => {
     expect(document.querySelector('.profile-cosmetic-picture')).toBeTruthy()
     view.rerender(<ProfileAvatar data={data} repo={repo} preview={{ frame: 'frame-flame-1' }} />)
     expect(document.querySelector('.cosmetic-frame-raster')).toBeNull()
+    expect(document.querySelector('.cosmetic-frame-art')).toBeNull()
     view.rerender(
       <ProfileAvatar data={data} repo={repo} preview={{ frame: 'frame-mist-swordsman' }} />,
     )

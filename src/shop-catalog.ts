@@ -37,8 +37,26 @@ const starter: ShopItem = {
   extraRequired: 0,
 }
 
-export const SHOP_ITEMS: ShopItem[] = [
+// Keep these definitions for a future restoration without discarding saved ownership.
+// Archived items are excluded from every active lookup, preview and purchase.
+export const ARCHIVED_AVATAR_FRAMES: ShopItem[] = [
   starter,
+  ...themes.flatMap(([theme, name]) =>
+    framePrices.map((price, tier): ShopItem => ({
+      id: `frame-${theme}-${tier + 1}`,
+      name: `${name} · ${tierNames[tier]}`,
+      description: `Khung ${name.toLowerCase()} cấp ${tier + 1}, họa tiết và đường viền riêng quanh avatar.`,
+      category: 'frame',
+      theme,
+      tier,
+      price,
+      streakRequired: frameStreaks[tier],
+      extraRequired: tier === 4 ? 50 : 0,
+    })),
+  ),
+]
+
+export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'frame-mist-swordsman',
     name: 'Muichiro - Premium',
@@ -55,19 +73,6 @@ export const SHOP_ITEMS: ShopItem[] = [
     extraRequired: 0,
   },
   ...DEMON_SLAYER_FRAMES,
-  ...themes.flatMap(([theme, name]) =>
-    framePrices.map((price, tier): ShopItem => ({
-      id: `frame-${theme}-${tier + 1}`,
-      name: `${name} · ${tierNames[tier]}`,
-      description: `Khung ${name.toLowerCase()} cấp ${tier + 1}, họa tiết và đường viền riêng quanh avatar.`,
-      category: 'frame',
-      theme,
-      tier,
-      price,
-      streakRequired: frameStreaks[tier],
-      extraRequired: tier === 4 ? 50 : 0,
-    })),
-  ),
   ...themes.flatMap(([theme, name]) =>
     [150, 900].map((price, tier): ShopItem => ({
       id: `banner-${theme}-${tier + 1}`,

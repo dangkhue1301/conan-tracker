@@ -456,7 +456,7 @@ function BotAvatar({ seed, frameId }: { seed: number | string; frameId: string }
     shirt = ['#8b5cf6', '#10b981', '#3b82f6', '#f59e0b', '#ec4899'][n % 5]
   const frame = itemById(frameId)
   return (
-    <span className={`bot-avatar bot-frame-${n % 5}`} title={`Khung ${frameId}`}>
+    <span className="bot-avatar" title={frame?.name}>
       <svg viewBox="0 0 64 64" role="img" aria-label="Avatar nhân vật">
         <rect width="64" height="64" rx="32" fill={shirt} opacity=".2" />
         <path d="M9 64Q10 42 32 42T55 64" fill={shirt} />

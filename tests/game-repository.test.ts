@@ -26,24 +26,24 @@ describe('demo game state persistence and permissions', () => {
   it('keeps Coin independent from XP and owns purchases permanently, with duplicate retries harmless', async () => {
     seed()
     const before = await repo().load()
-    await repo().gameAction({ type: 'buy', itemId: 'frame-flame-1' })
-    await repo().gameAction({ type: 'buy', itemId: 'frame-flame-1' })
-    await repo().gameAction({ type: 'equip', category: 'frame', itemId: 'frame-flame-1' })
+    await repo().gameAction({ type: 'buy', itemId: 'title-flame-1' })
+    await repo().gameAction({ type: 'buy', itemId: 'title-flame-1' })
+    await repo().gameAction({ type: 'equip', category: 'title', itemId: 'title-flame-1' })
     const after = await repo('mentor').load()
     expect(after.game!.spentCoins).toBe(100)
-    expect(after.game!.inventory.filter((i) => i === 'frame-flame-1')).toHaveLength(1)
-    expect(after.game!.equipped.frame).toBe('frame-flame-1')
+    expect(after.game!.inventory.filter((i) => i === 'title-flame-1')).toHaveLength(1)
+    expect(after.game!.equipped.title).toBe('title-flame-1')
     expect(gameStats(after, '2026-10-14').xp).toBe(gameStats(before, '2026-10-14').xp)
     expect(gameStats(after, '2026-10-14').coins).toBe(gameStats(before, '2026-10-14').coins - 100)
     await expect(
-      repo('parent').gameAction({ type: 'buy', itemId: 'frame-football-1' }),
+      repo('parent').gameAction({ type: 'buy', itemId: 'title-football-1' }),
     ).rejects.toThrow('Conan')
     await expect(
-      repo().gameAction({ type: 'equip', category: 'pet', itemId: 'frame-flame-1' }),
+      repo().gameAction({ type: 'equip', category: 'pet', itemId: 'title-flame-1' }),
     ).rejects.toThrow('phù hợp')
-    await expect(repo().gameAction({ type: 'buy', itemId: 'frame-flame-5' })).rejects.toThrow(
-      'điều kiện',
-    )
+    await expect(
+      repo().gameAction({ type: 'buy', itemId: 'frame-mist-swordsman' }),
+    ).rejects.toThrow('điều kiện')
   })
   it('keeps milestones and message reads private to each demo role', async () => {
     seed()
