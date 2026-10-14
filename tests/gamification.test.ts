@@ -6,6 +6,7 @@ import {
   gameState,
   gameStats,
   leagueBotFinalXp,
+  leagueBotProgress,
   leagueEntries,
   LEAGUES,
   monthlyProgress,
@@ -367,15 +368,93 @@ describe('stable fictional leagues', () => {
       20, 15, 10, 7, 7, 7, 7, 7, 5, 0,
     ])
     expect(leagueBotFinalXp('2026-10-12', 0, 0)).toBe(leagueBotFinalXp('2026-10-12', 0, 0))
-    expect(leagueBotFinalXp('2026-10-12', 9, 0)).toBeGreaterThan(
-      leagueBotFinalXp('2026-10-12', 0, 0) - 200,
-    )
     // Seven habits at the extra level earn 1,610 XP in a full week. First place
     // must remain attainable by actual work, including in Diamond.
     for (let week = 0; week < 52; week++)
       for (let tier = 0; tier < 10; tier++)
         for (let bot = 0; bot < 29; bot++)
           expect(leagueBotFinalXp(addDays('2026-01-05', week * 7), tier, bot)).toBeLessThan(1610)
+  })
+
+  it('raises every opponent across all ten tiers and keeps a full-work week capable of winning', () => {
+    for (let offset = 0; offset < 52; offset++) {
+      const week = addDays('2026-10-12', offset * 7)
+      let bronzeTotal = 0,
+        diamondTotal = 0
+      for (let bot = 0; bot < 29; bot++) {
+        let previous = 0
+        for (let tier = 0; tier < 10; tier++) {
+          const xp = leagueBotFinalXp(week, tier, bot)
+          expect(xp).toBeGreaterThan(previous)
+          expect(xp).toBeLessThanOrEqual(1580)
+          previous = xp
+        }
+        bronzeTotal += leagueBotFinalXp(week, 0, bot)
+        diamondTotal += leagueBotFinalXp(week, 9, bot)
+      }
+      expect(diamondTotal).toBeGreaterThan(bronzeTotal * 2)
+    }
+  })
+
+  it('preserves scores from seasons before the new competition rules', () => {
+    expect(
+      Array.from({ length: 6 }, (_, i) =>
+        leagueBotFinalXp('2026-10-05', 0, [0, 3, 7, 14, 23, 28][i]),
+      ),
+    ).toEqual([1204, 892, 828, 558, 270, 274])
+  })
+
+  it('earns XP in independent short sessions and keeps progressing while the page is closed', () => {
+    const start = Date.parse('2026-10-14T05:00:00Z')
+    const scores = (minute: number) =>
+      Array.from({ length: 29 }, (_, index) =>
+        leagueBotProgress('2026-10-12', 9, index, new Date(start + minute * 60000)),
+      )
+    let previous = scores(0),
+      changingMinutes = 0
+    for (let minute = 1; minute <= 120; minute++) {
+      const next = scores(minute)
+      const changed = next.filter((bot, index) => bot.xp > previous[index].xp).length
+      if (changed > 0) changingMinutes++
+      expect(changed).toBeLessThan(29)
+      for (let i = 0; i < next.length; i++) {
+        expect(next[i].xp).toBeGreaterThanOrEqual(previous[i].xp)
+        expect(next[i].recentXp).toBeGreaterThanOrEqual(0)
+      }
+      previous = next
+    }
+    expect(changingMinutes).toBeGreaterThan(50)
+    expect(scores(120)).toEqual(previous)
+    expect(previous.some((bot, index) => bot.xp > scores(0)[index].xp)).toBe(true)
+    expect(previous.some((bot) => bot.active)).toBe(true)
+  })
+
+  it('never drops at midnight and reaches the exact settlement score by the week boundary', () => {
+    const start = Date.parse('2026-10-12T00:00:00+07:00')
+    for (let tier = 0; tier < 10; tier++)
+      for (let bot = 0; bot < 29; bot++) {
+        let previous = 0
+        for (const minute of [0, 1439, 1440, 2879, 2880, 8639, 8640, 10079, 10080, 10110]) {
+          const progress = leagueBotProgress(
+            '2026-10-12',
+            tier,
+            bot,
+            new Date(start + minute * 60000),
+          )
+          expect(progress.xp).toBeGreaterThanOrEqual(previous)
+          expect(progress.xp).toBeLessThanOrEqual(leagueBotFinalXp('2026-10-12', tier, bot))
+          previous = progress.xp
+          if (minute >= 10079) {
+            expect(progress.xp).toBe(leagueBotFinalXp('2026-10-12', tier, bot))
+            expect(progress.active).toBe(false)
+          }
+        }
+      }
+    const data = fixture('2026-10-12', ['anki'])
+    const before = leagueEntries(data, '2026-10-14', new Date('2026-10-14T16:59:00Z'))
+    const after = leagueEntries(data, '2026-10-14', new Date('2026-10-14T17:00:00Z'))
+    for (const bot of before.filter((entry) => !entry.isConan))
+      expect(after.find((entry) => entry.id === bot.id)!.xp).toBeGreaterThanOrEqual(bot.xp)
   })
 
   it('creates exactly 29 stable invented profiles and one highlighted Conan without adapting bots to his XP', () => {

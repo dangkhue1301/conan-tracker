@@ -5,7 +5,6 @@ import {
   isCredited,
   planForDate,
   today,
-  weekday,
   weekStart,
 } from './domain'
 import type { GameState } from './gamification-types'
@@ -291,6 +290,19 @@ export function leagueHash(text: string): number {
 
 export function leagueBotFinalXp(week: string, tier: number, index: number): number {
   const level = Math.max(0, Math.min(9, Math.floor(tier)))
+  // Keep completed seasons on their original scoring rules, including late settlement.
+  if (week >= '2026-10-12') {
+    const position = (index + leagueHash(week)) % 29
+    const band = position < 3 ? 0 : position < 7 ? 1 : position < 14 ? 2 : position < 23 ? 3 : 4
+    const ability = leagueHash(`${week}:${index}:live-v2`) % 1001
+    const bronze =
+      [700, 500, 300, 130, 60][band] +
+      Math.floor((ability * [200, 180, 190, 190, 130][band]) / 1000)
+    const diamond =
+      [1430, 1300, 1120, 920, 700][band] +
+      Math.floor((ability * [150, 170, 220, 270, 250][band]) / 1000)
+    return Math.floor((bronze * (9 - level) + diamond * level) / 9)
+  }
   const seed = leagueHash(`${week}:${level}:${index}`)
   const raw =
     index < 3
@@ -303,6 +315,71 @@ export function leagueBotFinalXp(week: string, tier: number, index: number): num
             ? 350 + (seed % 451)
             : 100 + (seed % 351)
   return Math.floor((raw * (765 + level * 15)) / 900)
+}
+
+/** Fixed practice sessions keep scores identical across refreshes and devices. */
+export function leagueBotProgress(week: string, tier: number, index: number, atTime = new Date()) {
+  const elapsed = Math.max(
+    0,
+    Math.floor((atTime.getTime() - Date.parse(`${week}T00:00:00+07:00`)) / 60000),
+  )
+  const finalXp = leagueBotFinalXp(week, tier, index)
+  const level = Math.max(0, Math.min(9, Math.floor(tier)))
+  const legacySeed = leagueHash(`${week}:${level}:${index}`)
+  const weights = Array.from({ length: 7 }, (_, day) =>
+    week < '2026-10-12'
+      ? 70 + ((legacySeed + day * 37) % 61)
+      : 65 + (leagueHash(`${week}:${index}:day:${day}:v2`) % 76),
+  )
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0)
+  const sessionCount = 3 + (leagueHash(`${week}:${index}:routine`) % 2) + Math.floor(level / 4)
+  const scoreAt = (minutes: number) => {
+    if (minutes >= 7 * 1440) return { xp: finalXp, active: false }
+    const day = Math.floor(minutes / 1440),
+      minute = minutes % 1440
+    const doneWeight = weights.slice(0, day).reduce((sum, weight) => sum + weight, 0)
+    const doneXp = Math.floor((finalXp * doneWeight) / totalWeight)
+    if (week < '2026-10-12') {
+      return {
+        xp: Math.floor(
+          (finalXp * (doneWeight + weights[day] * (Math.floor(minute / 240) / 6))) / totalWeight,
+        ),
+        active: false,
+      }
+    }
+    const dayXp = Math.floor((finalXp * (doneWeight + weights[day])) / totalWeight) - doneXp
+    const phase = leagueHash(`${week}:${index}:day:${day}:phase`) % 1320
+    const sessions = Array.from({ length: sessionCount }, (_, slot) => {
+      const seed = leagueHash(`${week}:${index}:day:${day}:session:${slot}`)
+      return {
+        start: (Math.floor((slot * 1320) / sessionCount) + phase + (seed % 51)) % 1320,
+        duration: 25 + (seed % 71),
+        cadence: 2 + (seed % 4),
+        weight: 20 + (seed % 41),
+      }
+    }).sort((a, b) => a.start - b.start)
+    const sessionWeight = sessions.reduce((sum, session) => sum + session.weight, 0)
+    let xp = doneXp,
+      usedWeight = 0,
+      active = false
+    for (const session of sessions) {
+      const budget =
+        Math.floor((dayXp * (usedWeight + session.weight)) / sessionWeight) -
+        Math.floor((dayXp * usedWeight) / sessionWeight)
+      usedWeight += session.weight
+      if (minute >= session.start + session.duration) xp += budget
+      else if (minute >= session.start) {
+        active ||= budget > 0
+        xp += Math.floor(
+          (budget * Math.floor((minute - session.start) / session.cadence)) /
+            Math.ceil(session.duration / session.cadence),
+        )
+      }
+    }
+    return { xp, active }
+  }
+  const current = scoreAt(elapsed)
+  return { ...current, recentXp: current.xp - scoreAt(Math.max(0, elapsed - 30)).xp }
 }
 
 const BOT_PROFILES = [
@@ -344,6 +421,8 @@ export interface LeagueEntry {
   avatarSeed: number
   frameId: string
   xp: number
+  recentXp: number
+  active: boolean
   isConan: boolean
   rank: number
 }
@@ -351,35 +430,15 @@ export interface LeagueEntry {
 export function leagueEntries(data: Snapshot, date = today(), atTime = new Date()): LeagueEntry[] {
   const state = gameState(data)
   const week = weekStart(date)
-  const timeParts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Ho_Chi_Minh',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  }).formatToParts(atTime)
-  const hour = Number(timeParts.find((part) => part.type === 'hour')?.value ?? 0)
-  const minute = Number(timeParts.find((part) => part.type === 'minute')?.value ?? 0)
-  const fullDays = weekday(date) - 1
-  // Calculate checkpoints from integer minutes: floating point fractions such
-  // as 2 + 1/3 must not accidentally delay the 08:00 tick until 08:01.
-  const todayFraction = Math.floor((hour * 60 + minute) / 240) / 6
   const entries: LeagueEntry[] = BOT_PROFILES.map(([name, country], i) => {
     const seed = leagueHash(`${week}:${state.league.tier}:${i}`)
-    // Each bot follows a fixed daily schedule. No value depends on Conan's score.
-    const weights = Array.from({ length: 7 }, (_, day) => 70 + ((seed + day * 37) % 61))
-    const worked =
-      weights.slice(0, fullDays).reduce((sum, weight) => sum + weight, 0) +
-      (weights[fullDays] ?? 0) * todayFraction
     return {
       id: `bot-${i}`,
       name,
       country,
       avatarSeed: seed,
       frameId: `frame-${['flame', 'football', 'detective', 'manga', 'builder', 'space'][seed % 6]}-${1 + (seed % 5)}`,
-      xp: Math.floor(
-        (leagueBotFinalXp(week, state.league.tier, i) * worked) /
-          weights.reduce((sum, weight) => sum + weight, 0),
-      ),
+      ...leagueBotProgress(week, state.league.tier, i, atTime),
       isConan: false,
       rank: 0,
     }
@@ -391,6 +450,8 @@ export function leagueEntries(data: Snapshot, date = today(), atTime = new Date(
     avatarSeed: 0,
     frameId: state.equipped.frame ?? 'frame-starter',
     xp: gameStats(data, date).weeklyXp,
+    recentXp: 0,
+    active: false,
     isConan: true,
     rank: 0,
   })

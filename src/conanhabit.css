@@ -1074,6 +1074,50 @@ textarea:disabled {
 .league-rows {
   padding: 10px 24px 24px;
 }
+.league-live {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.league-live > span,
+.league-activity {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--success);
+}
+.league-live > span {
+  font-size: 13px;
+  font-weight: 600;
+}
+.league-live small {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.league-live i,
+.league-activity i {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: currentColor;
+}
+.league-player-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 10px;
+}
+.league-xp .league-xp-gain {
+  display: block;
+  color: var(--success);
+  font-size: 11px;
+  margin-top: 3px;
+}
 .league-row {
   display: flex;
   align-items: center;
@@ -1123,6 +1167,8 @@ textarea:disabled {
   border-radius: 5px;
 }
 .league-xp {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   font-weight: 700;
   color: var(--foreground);

@@ -494,8 +494,18 @@ function BotAvatar({ seed, frameId }: { seed: number | string; frameId: string }
 export function League({ data, repo, run, busy, currentDate }: Props) {
   const [clock, setClock] = useState(new Date())
   useEffect(() => {
-    const timer = setInterval(() => setClock(new Date()), 60000)
-    return () => clearInterval(timer)
+    const refresh = () => setClock(new Date())
+    const resume = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    const timer = setInterval(resume, 15000)
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', resume)
+    return () => {
+      clearInterval(timer)
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', resume)
+    }
   }, [])
   const game = gameState(data),
     entries = leagueEntries(data, currentDate, clock),
@@ -540,6 +550,20 @@ export function League({ data, repo, run, busy, currentDate }: Props) {
       </div>
       <div className="league-layout">
         <section className="card league-main">
+          <div className="league-live" aria-label="Cập nhật bảng xếp hạng">
+            <span>
+              <i aria-hidden="true" /> Cập nhật mỗi 15 giây
+            </span>
+            <small>
+              {entries.filter((entry) => entry.active).length} đối thủ đang luyện tập ·{' '}
+              {clock.toLocaleTimeString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+              })}
+            </small>
+          </div>
           <div className="league-podium">
             {podium.map((e) => (
               <div key={e.id} className={`podium-place podium-${e.rank}`}>
@@ -561,6 +585,7 @@ export function League({ data, repo, run, busy, currentDate }: Props) {
             {entries.map((e) => (
               <div
                 key={e.id}
+                data-player-id={e.id}
                 className={`league-row ${e.isConan ? 'is-conan' : ''} ${e.rank <= slots && tier < 9 ? 'promotion' : ''} ${e.rank > 25 && tier > 0 ? 'demotion' : ''}`}
               >
                 <strong className="league-position">
@@ -576,10 +601,22 @@ export function League({ data, repo, run, busy, currentDate }: Props) {
                     {e.name}
                     {e.isConan && <span>Em</span>}
                   </strong>
-                  <small>{countryLabel(e.country)}</small>
+                  <small className="league-player-meta">
+                    <span>{countryLabel(e.country)}</span>
+                    {e.active && (
+                      <span className="league-activity">
+                        <i aria-hidden="true" /> Đang luyện tập
+                      </span>
+                    )}
+                  </small>
                 </div>
                 <span className="league-xp">
-                  {e.xp.toLocaleString('vi-VN')} <small>XP</small>
+                  <span>
+                    {e.xp.toLocaleString('vi-VN')} <small>XP</small>
+                  </span>
+                  {e.recentXp > 0 && (
+                    <small className="league-xp-gain">+{e.recentXp} XP / 30 phút</small>
+                  )}
                 </span>
                 {e.rank === slots && tier < 9 && (
                   <span className="league-band-label">VÙNG THĂNG HẠNG</span>
@@ -635,6 +672,10 @@ export function League({ data, repo, run, busy, currentDate }: Props) {
                 : 'Hạng cao nhất! Cùng chinh phục vị trí trên bục vinh danh.'}
             </p>
             <p className="muted">Làm thêm giúp tăng XP. Mua đồ bằng Coin giữ nguyên XP của em.</p>
+            <p className="muted">
+              Hạng càng cao, đối thủ tích lũy càng nhiều XP và bám đuổi sát hơn. Điểm vẫn tăng khi
+              em rời trang.
+            </p>
             <p className="muted">
               Giải chốt sau Chủ nhật. Tuần chưa tham gia sẽ không bị xuống hạng.
             </p>

@@ -13,7 +13,7 @@ import {
 import { SHOP_ITEMS } from '../src/shop-catalog'
 import { defaultHabits } from '../src/defaults'
 import { addDays } from '../src/domain'
-import { emptyGameState, gameStats, LEAGUES } from '../src/gamification'
+import { emptyGameState, gameStats, leagueEntries, LEAGUES } from '../src/gamification'
 import { League } from '../src/pages/GameExtras'
 import Shop from '../src/pages/Shop'
 import { DemoRepository, demoSnapshot } from '../src/repository'
@@ -312,6 +312,53 @@ describe('Shop integration with persisted Coin and XP', () => {
 })
 
 describe('league presentation', () => {
+  it('refreshes live scores without a reload and catches up immediately on return', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-14T05:00:00Z'))
+    const data = fixture(),
+      repo = new DemoRepository('learner'),
+      run = vi.fn<Run>()
+    data.game!.league.tier = 9
+    const actions = vi.spyOn(repo, 'gameAction')
+    const timerCount = vi.getTimerCount()
+    const { container, unmount } = render(
+      <League data={data} repo={repo} run={run} busy={false} currentDate={DATE} />,
+    )
+    const readScores = () =>
+      [...container.querySelectorAll('.league-row')].map((row) => ({
+        id: row.getAttribute('data-player-id'),
+        xp: row.querySelector('.league-xp > span')!.textContent,
+      }))
+    const initial = readScores()
+    expect(screen.getByText('Cập nhật mỗi 15 giây')).toBeTruthy()
+    act(() => {
+      vi.advanceTimersByTime(30 * 60000)
+    })
+    expect(readScores()).not.toEqual(initial)
+    const expected = leagueEntries(data, DATE, new Date())
+    expect(readScores().map((row) => row.id)).toEqual(expected.map((entry) => entry.id))
+    for (const entry of expected)
+      expect(
+        container.querySelector(`[data-player-id="${entry.id}"] .league-xp > span`)!.textContent,
+      ).toBe(`${entry.xp.toLocaleString('vi-VN')} XP`)
+    vi.setSystemTime(new Date('2026-10-14T10:00:00Z'))
+    act(() => {
+      window.dispatchEvent(new Event('focus'))
+    })
+    expect(readScores().map((row) => row.id)).toEqual(
+      leagueEntries(data, DATE, new Date()).map((entry) => entry.id),
+    )
+    vi.setSystemTime(new Date('2026-10-14T14:00:00Z'))
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    expect(container.querySelector('.league-live')!.textContent).toContain('21:00:00')
+    expect(actions).not.toHaveBeenCalled()
+    expect(run).not.toHaveBeenCalled()
+    unmount()
+    expect(vi.getTimerCount()).toBe(timerCount)
+  })
+
   it('shows ten rank badges and the simulation label with inline rules instead of an information dialog', () => {
     const data = fixture(),
       repo = new DemoRepository('learner'),

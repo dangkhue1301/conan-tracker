@@ -329,6 +329,41 @@ describe('streak repair, per-user receipts and private avatars', () => {
 })
 
 describe('calendar gifts and weekly league settlement', () => {
+  it('matches every tier and opponent under both season scoring versions', async () => {
+    await db.exec('reset role;')
+    const { rows } = await db.query<{ week: string; tier: number; bot: number; xp: number }>(`
+      select week,tier,bot,conan_private.bot_xp(week,tier,bot) xp
+      from (values ('2026-10-05'),('2026-10-12'),('2026-10-19'),('2027-01-04')) seasons(week),
+      generate_series(0,9) tier,generate_series(0,28) bot`)
+    for (const row of rows) expect(row.xp).toBe(leagueBotFinalXp(row.week, row.tier, row.bot))
+  })
+
+  it('settles a live season using the same final scores once without altering earned XP', async () => {
+    await seedDays('2026-10-12', '2026-10-18', 'done')
+    await db.exec(`reset role;
+      create or replace function public.app_today() returns date language sql stable set search_path='' as $$ select date '2026-10-19' $$;
+      update game_state set data=jsonb_set(data,'{league}','{"tier":9,"joinedWeek":"2026-10-12","history":[]}'::jsonb);`)
+    try {
+      await login('learner')
+      const settled = await snapshot()
+      const xp = gameStats(settled, '2026-10-18').weeklyXp
+      const rank =
+        1 +
+        Array.from({ length: 29 }, (_, i) => leagueBotFinalXp('2026-10-12', 9, i)).filter(
+          (bot) => bot >= xp,
+        ).length
+      expect(settled.game!.league.history).toEqual([
+        { week: '2026-10-12', tier: 9, rank, xp, result: rank >= 26 ? 'demoted' : 'stayed' },
+      ])
+      expect((await snapshot()).game!.league).toEqual(settled.game!.league)
+      expect(gameStats(await snapshot(), '2026-10-18').weeklyXp).toBe(xp)
+    } finally {
+      await db.exec(
+        `reset role; create or replace function public.app_today() returns date language sql stable set search_path='' as $$ select date '${day}' $$;`,
+      )
+    }
+  })
+
   it('enforces full months, custom wishes, adult approval/delivery and one reward without currency cost', async () => {
     await seedDays('2026-09-01', '2026-09-30')
     await login('learner')
