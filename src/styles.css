@@ -2756,3 +2756,7 @@ summary::-webkit-details-marker {
 .chart-column {
   min-width: 44px;
 }
+.coin-icon {
+  flex-shrink: 0;
+  vertical-align: -0.125em;
+}

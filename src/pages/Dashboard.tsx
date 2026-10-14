@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleHelp,
-  Coins,
   Coffee,
   Flame,
   Languages,
@@ -37,6 +36,7 @@ import {
 } from '../domain'
 import { defaultHabits, HABIT_IDS, STATUS_LABELS } from '../defaults'
 import { gameStats } from '../gamification'
+import { CoinIcon } from '../CoinIcon'
 import { StreakFlame } from '../cosmetics'
 import { Button, Modal } from '../ui'
 import { DailyChecklist } from './Today'
@@ -184,7 +184,7 @@ export default function Dashboard({
         </div>
         <div className="habit-kpi kpi-violet">
           <span className="kpi-icon">
-            <Coins size={27} />
+            <CoinIcon size={27} />
           </span>
           <div>
             <span>Ví Conan Coin</span>

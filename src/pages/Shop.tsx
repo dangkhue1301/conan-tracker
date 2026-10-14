@@ -4,7 +4,6 @@ import {
   Camera,
   Check,
   ChevronRight,
-  Coins,
   Flame,
   Frame,
   Image,
@@ -21,6 +20,7 @@ import {
 import type { Run } from '../App'
 import type { CosmeticCategory, ShopItem } from '../gamification-types'
 import { gameState, gameStats } from '../gamification'
+import { CoinIcon } from '../CoinIcon'
 import { CATEGORY_LABELS, COLLECTION_LABELS, itemById, SHOP_ITEMS } from '../shop-catalog'
 import type { Repository, Snapshot } from '../types'
 import {
@@ -126,7 +126,7 @@ export default function Shop({
           </p>
         </div>
         <div className="shop-wallet">
-          <Coins size={26} />
+          <CoinIcon size={26} />
           <div>
             <strong>{number(stats.coins)}</strong>
             <small>Conan Coin có thể dùng</small>
@@ -350,7 +350,7 @@ export default function Shop({
                         </>
                       ) : (
                         <>
-                          <Coins size={14} />
+                          <CoinIcon size={14} />
                           {number(item.price)} Coin
                         </>
                       )}
@@ -440,7 +440,7 @@ export default function Shop({
               <p>{selected.description}</p>
             </div>
             <span className="shop-preview-price">
-              <Coins size={20} />
+              <CoinIcon size={20} />
               {number(selected.price)}
             </span>
           </div>
@@ -547,7 +547,7 @@ export default function Shop({
                       )
                   }}
                 >
-                  {qualified ? <Coins size={16} /> : <LockKeyhole size={16} />}{' '}
+                  {qualified ? <CoinIcon size={16} /> : <LockKeyhole size={16} />}{' '}
                   {qualified
                     ? confirmation
                       ? 'Xác nhận mua'
