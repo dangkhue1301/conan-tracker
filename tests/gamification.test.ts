@@ -313,12 +313,12 @@ describe('permanent milestones and catalog', () => {
     expect(streakMilestones(data, addDays(date, 10))).toEqual([])
   })
 
-  it('ships 67 unique purchases plus one free frame in five active categories', () => {
-    expect(SHOP_ITEMS).toHaveLength(68)
-    expect(new Set(SHOP_ITEMS.map((item) => item.id)).size).toBe(68)
-    expect(SHOP_ITEMS.filter((item) => item.price > 0)).toHaveLength(67)
+  it('ships 80 unique purchases plus one free frame in five active categories', () => {
+    expect(SHOP_ITEMS).toHaveLength(81)
+    expect(new Set(SHOP_ITEMS.map((item) => item.id)).size).toBe(81)
+    expect(SHOP_ITEMS.filter((item) => item.price > 0)).toHaveLength(80)
     expect(Object.keys(CATEGORY_LABELS)).toHaveLength(5)
-    expect(SHOP_ITEMS.filter((item) => item.category === 'frame')).toHaveLength(32)
+    expect(SHOP_ITEMS.filter((item) => item.category === 'frame')).toHaveLength(45)
     expect(itemById('frame-mist-swordsman')).toMatchObject({
       price: 4000,
       streakRequired: 40,

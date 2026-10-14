@@ -12,8 +12,23 @@ import './cosmetics.css'
 export { CelebrationSymbol, CELEBRATION_STYLES, celebrationStyle } from './celebration-symbols'
 
 export function CosmeticName({ item }: { item: ShopItem }) {
+  const colors = item.namePalette
   return (
-    <span className={item.id === 'frame-mist-swordsman' ? 'cosmetic-premium-name' : undefined}>
+    <span
+      className={item.premium ? 'cosmetic-premium-name' : undefined}
+      style={
+        colors
+          ? ({
+              '--premium-light-ink': colors.light[0],
+              '--premium-light-deep': colors.light[1],
+              '--premium-light-shine': colors.light[2],
+              '--premium-dark-ink': colors.dark[0],
+              '--premium-dark-deep': colors.dark[1],
+              '--premium-dark-shine': colors.dark[2],
+            } as CSSProperties)
+          : undefined
+      }
+    >
       {item.name}
     </span>
   )
@@ -130,11 +145,11 @@ export function CosmeticDialog({
 export function FrameArtwork({ item }: { item: ShopItem }) {
   const uid = useId().replaceAll(':', ''),
     [a, b, c] = palette(item.theme)
-  if (item.id === 'frame-mist-swordsman')
+  if (item.artwork)
     return (
       <img
         className="cosmetic-frame-art cosmetic-frame-raster"
-        src={`${import.meta.env.BASE_URL}cosmetics/mist-swordsman-frame.png`}
+        src={`${import.meta.env.BASE_URL}${item.artwork}`}
         alt=""
         aria-hidden="true"
         loading="lazy"

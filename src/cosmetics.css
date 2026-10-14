@@ -1,16 +1,16 @@
 .cosmetic-premium-name {
-  --premium-ink: #0f766e;
-  --premium-shine: #0e7490;
-  --premium-deep: #155e75;
+  --premium-ink: var(--premium-light-ink, #0f766e);
+  --premium-shine: var(--premium-light-shine, #0e7490);
+  --premium-deep: var(--premium-light-deep, #155e75);
   color: var(--premium-ink);
   font-weight: 850;
-  text-shadow: 0 0 14px #14b8a61a;
+  text-shadow: 0 0 14px color-mix(in srgb, var(--premium-ink) 10%, transparent);
 }
 html[data-theme='dark'] .cosmetic-premium-name {
-  --premium-ink: #5eead4;
-  --premium-shine: #cffafe;
-  --premium-deep: #a7f3d0;
-  text-shadow: 0 0 16px #2dd4bf33;
+  --premium-ink: var(--premium-dark-ink, #5eead4);
+  --premium-shine: var(--premium-dark-shine, #cffafe);
+  --premium-deep: var(--premium-dark-deep, #a7f3d0);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--premium-ink) 20%, transparent);
 }
 @supports ((background-clip: text) or (-webkit-background-clip: text)) {
   .cosmetic-premium-name {

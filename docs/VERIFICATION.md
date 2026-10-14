@@ -88,3 +88,12 @@ Công cụ trình duyệt từ chối mở localhost theo chính sách công c�
 - Kiểm thử UI bổ sung sáu biểu tượng khác nhau, hiệu ứng toàn màn hình theo lựa chọn và chuyển giữa khung PNG/SVG an toàn. TypeScript, format và build đạt trước triển khai.
 - 14/14 kiểm thử trong `tests/new-ui.test.tsx` đạt sau khi bổ sung bộ lọc Demon Slayer: chọn từ nhóm linh thú tự chuyển về khung, chỉ giữ đúng Muichiro - Premium; tìm theo tên bộ sưu tập vẫn thấy khung. Card và preview có tên Premium riêng, đúng giá 4.000 Coin/streak 40 ngày, không phát sinh giao dịch khi lọc hoặc xem thử.
 - Trang giải giữ nhãn “Giải đấu mô phỏng”, mười huy hiệu hạng và luật trực tiếp trong “Mục tiêu của tuần”; nút/popup “Thông tin giải” đã bỏ. Kiểm thử UI xác nhận các phần này và không gọi hành động tham gia/mua.
+
+## Thêm 13 khung Demon Slayer - Premium (14/10/2026)
+
+- Thêm Giyu, Tengen, Nezuko, Douma, Muzan, Sanemi, Obanai, Rengoku, Mitsuri, Gyomei, Akaza, Kokushibo và Tanjiro; giữ Muichiro đã có, không tạo bản trùng. Tên đều theo mẫu “Gyomei - Premium”, đúng chủ đề Demon Slayer và huy hiệu Premium.
+- 13 PNG RGBA 1254 × 1254 đã đối chiếu bằng bản ghép xem ảnh. Alpha tâm bằng 0; các góc bằng 0 hoặc 1/255 do viền sáng rất nhẹ. Bản dùng trong app nằm ở `public/cosmetics/demon-slayer/`; ảnh gốc được giữ ở nơi tạo.
+- Tên có màu, gradient và ánh sáng theo từng khung, với hai bảng màu sáng/tối. Playwright trên Edge xác nhận cả 14 ảnh tải được, tên trong Shop và preview có đúng màu; reduced-motion dừng animation.
+- Đã rà bộ lọc Demon Slayer ở 1366px trên giao diện sáng/tối và cửa sổ xem thử Gyomei ở 390px, không tràn ngang trang. Chỉ dùng demo trên máy, không thực hiện mua trong tài khoản thật. Kết quả và ảnh QA lưu cục bộ dưới `qa/`, không đưa vào repository.
+- 122/122 kiểm thử trên 9 file đạt; format, TypeScript và build đạt. Kiểm thử PostgreSQL so khớp toàn bộ catalog với frontend, xác nhận Muichiro/Gyomei/Kokushibo mua và trang bị được tại mốc 40 ngày khi đủ Coin, bị chặn ở 39 ngày, retry không trừ Coin hai lần và XP giữ nguyên.
+- Migration `add_demon_slayer_premium_frames` đã áp dụng lên Supabase; truy vấn lại xác nhận 13 SKU mới cùng Muichiro có giá 4.000 Coin, streak 40 ngày, extra 0. SQL chỉ upsert catalog, không cập nhật ví, inventory hoặc lịch sử.

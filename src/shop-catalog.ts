@@ -1,4 +1,5 @@
 import type { CosmeticCategory, ShopItem } from './gamification-types'
+import { DEMON_SLAYER_FRAMES } from './demon-slayer-frames'
 
 export const CATEGORY_LABELS: Record<Exclude<CosmeticCategory, 'weapon'>, string> = {
   frame: 'Khung avatar',
@@ -46,11 +47,14 @@ export const SHOP_ITEMS: ShopItem[] = [
     category: 'frame',
     theme: 'mist',
     collection: 'demon-slayer',
+    premium: true,
+    artwork: 'cosmetics/mist-swordsman-frame.png',
     tier: 3,
     price: 4000,
     streakRequired: 40,
     extraRequired: 0,
   },
+  ...DEMON_SLAYER_FRAMES,
   ...themes.flatMap(([theme, name]) =>
     framePrices.map((price, tier): ShopItem => ({
       id: `frame-${theme}-${tier + 1}`,

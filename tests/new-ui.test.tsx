@@ -109,7 +109,19 @@ describe('Shop integration with persisted Coin and XP', () => {
     expect(screen.getByRole('button', { name: 'Khung avatar' }).getAttribute('aria-pressed')).toBe(
       'true',
     )
-    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(1)
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(14)
+    for (const item of SHOP_ITEMS.filter((entry) => entry.collection === 'demon-slayer')) {
+      const card = screen.getByRole('button', { name: `${item.name}, 4.000 Conan Coin` })
+      expect(within(card).getByText('PREMIUM')).toBeTruthy()
+      expect(card.querySelector('.cosmetic-frame-raster')?.getAttribute('src')).toContain(
+        item.artwork,
+      )
+      if (item.namePalette) {
+        const name = card.querySelector<HTMLElement>('.cosmetic-premium-name')!
+        expect(name.style.getPropertyValue('--premium-light-ink')).toBe(item.namePalette.light[0])
+        expect(name.style.getPropertyValue('--premium-dark-ink')).toBe(item.namePalette.dark[0])
+      }
+    }
     const premium = screen.getByRole('button', {
       name: 'Muichiro - Premium, 4.000 Conan Coin',
     })
@@ -133,10 +145,31 @@ describe('Shop integration with persisted Coin and XP', () => {
     fireEvent.change(screen.getByRole('searchbox', { name: 'Tìm vật phẩm' }), {
       target: { value: 'Demon Slayer' },
     })
-    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(1)
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(14)
     expect(
       screen.getByRole('button', { name: 'Muichiro - Premium, 4.000 Conan Coin' }),
     ).toBeTruthy()
+    expect(action).not.toHaveBeenCalled()
+  })
+  it('previews the correctly named Gyomei frame with its own colors without buying it', () => {
+    const data = fixture(),
+      repo = new DemoRepository('learner'),
+      action = vi.spyOn(repo, 'gameAction')
+    render(<ShopHarness initial={data} repo={repo} />)
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Tìm vật phẩm' }), {
+      target: { value: 'Gyomei' },
+    })
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: 'Gyomei - Premium, 4.000 Conan Coin' }))
+    const dialog = within(screen.getByRole('dialog')),
+      name = dialog.getByRole('heading', { name: 'Gyomei - Premium' }),
+      label = name.querySelector<HTMLElement>('.cosmetic-premium-name')!
+    expect(label.style.getPropertyValue('--premium-light-ink')).toBe('#92400e')
+    expect(label.style.getPropertyValue('--premium-dark-ink')).toBe('#fbbf24')
+    expect(dialog.getByText('Demon Slayer')).toBeTruthy()
+    expect(
+      screen.getByRole('dialog').querySelector('.cosmetic-frame-raster')?.getAttribute('src'),
+    ).toContain('cosmetics/demon-slayer/gyomei-frame.png')
     expect(action).not.toHaveBeenCalled()
   })
   it('requires confirmation, purchases once, preserves XP, then equips and removes an owned frame', async () => {

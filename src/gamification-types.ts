@@ -6,6 +6,12 @@ export interface ShopItem {
   category: CosmeticCategory
   theme: string
   collection?: 'demon-slayer'
+  premium?: boolean
+  artwork?: string
+  namePalette?: {
+    light: readonly [string, string, string]
+    dark: readonly [string, string, string]
+  }
   tier: number
   price: number
   streakRequired: number

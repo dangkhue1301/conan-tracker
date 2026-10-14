@@ -274,8 +274,9 @@ export default function Shop({
                   className="shop-item-art"
                   style={
                     {
-                      '--item-color':
-                        item.category === 'celebration'
+                      '--item-color': item.namePalette
+                        ? item.namePalette.dark[0]
+                        : item.category === 'celebration'
                           ? celebrationStyle(item.theme).colors[0]
                           : (CATEGORY_COLORS[item.theme] ?? '#a78bfa'),
                     } as CSSProperties
@@ -286,7 +287,7 @@ export default function Shop({
                       ? 'ĐANG DÙNG'
                       : has
                         ? 'ĐÃ SỞ HỮU'
-                        : item.id === 'frame-mist-swordsman'
+                        : item.premium
                           ? 'PREMIUM'
                           : item.tier >= 3
                             ? 'HUYỀN THOẠI'
