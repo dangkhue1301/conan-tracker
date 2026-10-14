@@ -5,7 +5,7 @@ export interface ShopItem {
   description: string
   category: CosmeticCategory
   theme: string
-  collection?: 'demon-slayer'
+  collection?: 'demon-slayer' | 'blue-lock'
   premium?: boolean
   artwork?: string
   namePalette?: {

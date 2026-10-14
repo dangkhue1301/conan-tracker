@@ -151,6 +151,61 @@ describe('Shop integration with persisted Coin and XP', () => {
     ).toBeTruthy()
     expect(action).not.toHaveBeenCalled()
   })
+  it('finds all eight Blue Lock characters with Premium colors and keeps collection filters separate', () => {
+    const data = fixture(),
+      repo = new DemoRepository('learner'),
+      action = vi.spyOn(repo, 'gameAction')
+    render(<ShopHarness initial={data} repo={repo} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Ảnh bìa', exact: true }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Bộ sưu tập / chủ đề' }), {
+      target: { value: 'blue-lock' },
+    })
+    expect(screen.getByRole('button', { name: 'Khung avatar' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(8)
+    for (const character of [
+      'Kunigami',
+      'Aiku',
+      'Chigiri',
+      'Nagi',
+      'Rin',
+      'Bachira',
+      'Isagi',
+      'Sae',
+    ]) {
+      const card = screen.getByRole('button', { name: `${character} - Premium, 4.000 Conan Coin` })
+      expect(within(card).getByText('Blue Lock')).toBeTruthy()
+      expect(within(card).getByText('PREMIUM')).toBeTruthy()
+      expect(card.querySelector('.cosmetic-premium-name')?.getAttribute('style')).toContain(
+        '--premium-dark-ink',
+      )
+      expect(card.querySelector('.cosmetic-frame-raster')?.getAttribute('src')).toContain(
+        'cosmetics/blue-lock/',
+      )
+      expect(card.textContent).toContain('40 ngày')
+    }
+    expect(
+      screen.queryByRole('button', { name: 'Muichiro - Premium, 4.000 Conan Coin' }),
+    ).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Nagi - Premium, 4.000 Conan Coin' }))
+    const dialog = within(screen.getByRole('dialog')),
+      label = dialog
+        .getByRole('heading', { name: 'Nagi - Premium' })
+        .querySelector<HTMLElement>('.cosmetic-premium-name')!
+    expect(label.style.getPropertyValue('--premium-light-ink')).toBe('#475569')
+    expect(label.style.getPropertyValue('--premium-dark-ink')).toBe('#e2e8f0')
+    expect(dialog.getByText('Blue Lock')).toBeTruthy()
+    fireEvent.click(dialog.getByText('Đóng', { selector: 'button' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Bộ sưu tập / chủ đề' }), {
+      target: { value: 'all' },
+    })
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Tìm vật phẩm' }), {
+      target: { value: 'Blue Lock' },
+    })
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(8)
+    expect(action).not.toHaveBeenCalled()
+  })
   it('previews the correctly named Gyomei frame with its own colors without buying it', () => {
     const data = fixture(),
       repo = new DemoRepository('learner'),
@@ -245,7 +300,7 @@ describe('Shop integration with persisted Coin and XP', () => {
     data.game!.equipped.frame = 'frame-flame-2'
     const saved = structuredClone(data.game)
     render(<ShopHarness initial={data} repo={repo} />)
-    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(14)
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(22)
     expect(document.querySelector('svg.cosmetic-frame-art')).toBeNull()
     expect(screen.queryByText('Hành trình bắt đầu')).toBeNull()
     expect(screen.queryByText('Ngọn lửa · Chiến binh')).toBeNull()

@@ -86,32 +86,38 @@ afterAll(async () => {
 })
 
 describe('ConanHabit authoritative wallet and catalog', () => {
-  it.each(['frame-mist-swordsman', 'frame-gyomei', 'frame-kokushibo'])(
-    'enforces Coin, ownership and equip rules for %s at 40 days',
-    async (itemId) => {
-      await seedDays('2026-09-01', '2026-10-10', 'extra')
-      await login('learner')
-      const before = await snapshot()
-      await action({ type: 'buy', itemId })
-      const bought = await snapshot()
-      expect(bought.game!.inventory).toContain(itemId)
-      expect(bought.game!.spentCoins - before.game!.spentCoins).toBe(4000)
-      expect(gameStats(bought, day).xp).toBe(gameStats(before, day).xp)
-      await action({ type: 'buy', itemId })
-      expect((await snapshot()).game!.spentCoins).toBe(bought.game!.spentCoins)
-      await action({ type: 'equip', category: 'frame', itemId })
-      expect((await snapshot()).game!.equipped.frame).toBe(itemId)
-    },
-  )
-  it.each(['frame-mist-swordsman', 'frame-gyomei', 'frame-kokushibo'])(
-    'rejects %s at 39 days even with enough Coin',
-    async (itemId) => {
-      await seedDays('2026-09-01', '2026-10-09', 'extra')
-      await login('learner')
-      await expect(action({ type: 'buy', itemId })).rejects.toThrow('chưa đủ điều kiện')
-      expect((await snapshot()).game!.inventory).not.toContain(itemId)
-    },
-  )
+  it.each([
+    'frame-mist-swordsman',
+    'frame-gyomei',
+    'frame-kokushibo',
+    'frame-blue-lock-nagi',
+    'frame-blue-lock-aiku',
+  ])('enforces Coin, ownership and equip rules for %s at 40 days', async (itemId) => {
+    await seedDays('2026-09-01', '2026-10-10', 'extra')
+    await login('learner')
+    const before = await snapshot()
+    await action({ type: 'buy', itemId })
+    const bought = await snapshot()
+    expect(bought.game!.inventory).toContain(itemId)
+    expect(bought.game!.spentCoins - before.game!.spentCoins).toBe(4000)
+    expect(gameStats(bought, day).xp).toBe(gameStats(before, day).xp)
+    await action({ type: 'buy', itemId })
+    expect((await snapshot()).game!.spentCoins).toBe(bought.game!.spentCoins)
+    await action({ type: 'equip', category: 'frame', itemId })
+    expect((await snapshot()).game!.equipped.frame).toBe(itemId)
+  })
+  it.each([
+    'frame-mist-swordsman',
+    'frame-gyomei',
+    'frame-kokushibo',
+    'frame-blue-lock-nagi',
+    'frame-blue-lock-aiku',
+  ])('rejects %s at 39 days even with enough Coin', async (itemId) => {
+    await seedDays('2026-09-01', '2026-10-09', 'extra')
+    await login('learner')
+    await expect(action({ type: 'buy', itemId })).rejects.toThrow('chưa đủ điều kiện')
+    expect((await snapshot()).game!.inventory).not.toContain(itemId)
+  })
   it('rejects retired weapons without changing Coin or inventory', async () => {
     await login('learner')
     const before = await snapshot()
