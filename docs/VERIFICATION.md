@@ -79,3 +79,11 @@ Công cụ trình duyệt từ chối mở localhost theo chính sách công c�
 - Rà bản HTTPS bằng demo trên laptop 1366px và điện thoại 390px: bảng chia cột đều, Shop bốn cột trên laptop/hai cột trên điện thoại, không tràn ngang toàn trang. Đã sửa tiêu đề Shop bị ép hẹp, avatar header quá cỡ và bong bóng lời nhắn che nội dung khi không có tin mới.
 - Xem thử pet xác nhận chuyển động `cosmetic-pet-bob`; khung/kiếm tĩnh. Đã tìm và sửa lỗi trùng tên lớp chủ đề flame với icon flame làm mất lớp toàn màn hình. Bổ sung kiểm thử áp dụng CSS thật để bảo đảm overlay luôn fixed và không nhận kích thước icon; 9/9 kiểm thử Shop/overlay đạt sau sửa.
 - Thao tác mua trực tiếp trong demo bị kiểm duyệt tự động chặn vì tiêu Coin và lưu giao dịch. Không thử lại qua cách khác. Mua/xác nhận/trang bị đã được kiểm thử tự động bằng DemoRepository thật và RPC trong PostgreSQL; không thực hiện mua trong tài khoản production.
+
+## Huy hiệu, cỡ chữ và Khung Premium (14/10/2026)
+
+- Thay mười icon khiên đồng dạng bằng mười huy hiệu SVG có hình và chất liệu riêng. Thay sáu ngọn lửa ăn mừng bằng sáu biểu tượng và bảng màu khác nhau. Tăng chữ chính lên 16px và chữ phụ 13–14px với system font stack.
+- Khung Premium là PNG RGBA 1254 × 1254. Đã kiểm tra alpha tâm và góc bằng 0; bản dùng trong app ở `public/cosmetics/mist-swordsman-frame.png`. Prompt/mode tạo ảnh ghi tại `docs/PREMIUM_FRAME.md`.
+- Migration bổ sung SKU Premium giá 4.000 Coin, best streak 40 ngày và bỏ catalog vũ khí. Hash check-in và game_state trước/sau khớp; không đổi số dư, trang bị, quyền hoặc lịch sử học khi cập nhật catalog.
+- Kiểm thử PostgreSQL xác nhận mua được tại mốc 40 ngày khi đủ Coin, bị chặn ở 39 ngày dù có đủ Coin, retry không trừ tiền hai lần và XP giữ nguyên. SKU vũ khí cũ bị từ chối; giao diện ẩn nhóm này và không render vũ khí từng trang bị.
+- Kiểm thử UI bổ sung sáu biểu tượng khác nhau, hiệu ứng toàn màn hình theo lựa chọn và chuyển giữa khung PNG/SVG an toàn. TypeScript, format và build đạt trước triển khai.

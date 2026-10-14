@@ -1,0 +1,110 @@
+.league-badge {
+  display: block;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.league-heading .league-title-with-badge {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 0;
+}
+
+.league-title-with-badge > div {
+  min-width: 0;
+}
+
+.league-path.league-ranks {
+  min-width: 0;
+  max-width: 100%;
+  gap: 10px;
+  padding: 18px 20px;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.league-path.league-ranks > .league-rank {
+  flex: 1 0 82px;
+  min-width: 82px;
+  gap: 8px;
+  padding: 10px 4px 8px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  opacity: 1;
+  color: var(--foreground);
+}
+
+.league-path.league-ranks .league-rank > span {
+  width: 64px;
+  height: 64px;
+  background: transparent;
+  border-radius: 0;
+  color: inherit;
+  transform: none;
+  box-shadow: none;
+}
+
+.league-path.league-ranks .league-rank > small {
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.league-path.league-ranks > .league-rank.current {
+  border-color: var(--rank-color);
+  background: var(--rank-tint);
+  box-shadow: 0 3px 10px var(--rank-tint);
+  font-weight: 700;
+}
+
+.league-path.league-ranks > .league-rank.current > small {
+  font-weight: 800;
+}
+
+.league-path.league-ranks > .league-rank.passed {
+  background: color-mix(in srgb, var(--rank-tint) 55%, transparent);
+}
+
+.league-history .league-history-name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+@media (max-width: 768px) {
+  .league-heading .league-title-with-badge {
+    gap: 12px;
+  }
+
+  .league-title-with-badge > .league-badge {
+    width: 58px;
+    height: 58px;
+  }
+
+  .league-path.league-ranks {
+    padding: 14px;
+    gap: 8px;
+  }
+
+  .league-path.league-ranks .league-rank > small {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .league-heading .league-title-with-badge {
+    align-items: center;
+    gap: 10px;
+  }
+
+  .league-title-with-badge > .league-badge {
+    width: 48px;
+    height: 48px;
+  }
+
+  .league-title-with-badge .muted {
+    font-size: 14px;
+  }
+}

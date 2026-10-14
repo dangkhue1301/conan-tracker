@@ -4,9 +4,12 @@ import type { Run } from './App'
 import type { CosmeticCategory, ShopItem } from './gamification-types'
 import { gameState } from './gamification'
 import { itemById } from './shop-catalog'
+import { CelebrationSymbol, celebrationStyle } from './celebration-symbols'
 import type { Repository, Snapshot } from './types'
 import { Button, lockBodyScroll } from './ui'
 import './cosmetics.css'
+
+export { CelebrationSymbol, CELEBRATION_STYLES, celebrationStyle } from './celebration-symbols'
 
 const PALETTES: Record<string, [string, string, string]> = {
   flame: ['#fb923c', '#ef4444', '#fde68a'],
@@ -26,6 +29,7 @@ const PALETTES: Record<string, [string, string, string]> = {
   fox: ['#fb923c', '#ea580c', '#fed7aa'],
   wolf: ['#94a3b8', '#475569', '#e2e8f0'],
   phoenix: ['#fbbf24', '#ef4444', '#fef3c7'],
+  mist: ['#2dd4bf', '#0f766e', '#ccfbf1'],
 }
 const palette = (theme = 'detective') => PALETTES[theme] ?? PALETTES.detective
 const number = (n: number) => n.toLocaleString('vi-VN')
@@ -118,6 +122,17 @@ export function CosmeticDialog({
 export function FrameArtwork({ item }: { item: ShopItem }) {
   const uid = useId().replaceAll(':', ''),
     [a, b, c] = palette(item.theme)
+  if (item.id === 'frame-mist-swordsman')
+    return (
+      <img
+        className="cosmetic-frame-art cosmetic-frame-raster"
+        src={`${import.meta.env.BASE_URL}cosmetics/mist-swordsman-frame.png`}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+      />
+    )
   const tier = item.id === 'frame-starter' ? 0 : item.tier + 1
   const gems = Array.from({ length: tier >= 4 ? 12 : tier >= 2 ? 6 : 3 })
   return (
@@ -448,8 +463,7 @@ export function ProfileAvatar({
   const frame = itemById(equipped.frame),
     banner = itemById(equipped.banner),
     title = itemById(equipped.title)
-  const pet = itemById(equipped.pet),
-    weapon = itemById(equipped.weapon)
+  const pet = itemById(equipped.pet)
   const uploaded = useAvatarUrl(repo, game.avatarPath),
     [failed, setFailed] = useState(false)
   const url = avatarUrlOverride ?? uploaded
@@ -490,11 +504,6 @@ export function ProfileAvatar({
           )}
         </div>
         {frame && <FrameArtwork item={frame} />}
-        {weapon && (
-          <span className="profile-cosmetic-weapon">
-            <WeaponArtwork item={weapon} />
-          </span>
-        )}
         {pet && (
           <span className="profile-cosmetic-pet">
             <PetArtwork item={pet} />
@@ -518,7 +527,7 @@ export function CosmeticArt({ item }: { item: ShopItem }) {
   if (item.category === 'weapon') return <WeaponArtwork item={item} />
   if (item.category === 'pet') return <PetArtwork item={item} />
   if (item.category === 'frame') return <FrameArtwork item={item} />
-  if (item.category === 'celebration') return <StreakFlame count={10} extra size={90} />
+  if (item.category === 'celebration') return <CelebrationSymbol theme={item.theme} size={100} />
   return (
     <span
       className={`cosmetic-item-emblem cosmetic-item-emblem-${item.category}`}
@@ -749,7 +758,7 @@ export function MilestoneCelebration({
   close.current = onClose
   const highest = Math.max(...milestones.map((item) => item.count), 0)
   const theme = itemById(styleId)?.theme ?? 'flame',
-    colors = palette(theme)
+    colors = celebrationStyle(theme).colors
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null,
       unlock = lockBodyScroll()
@@ -836,7 +845,7 @@ export function MilestoneCelebration({
           MỘT CỘT MỐC MỚI!
         </span>
         <div className="celebration-flame">
-          <StreakFlame count={highest} extra={highest >= 30} size={230} />
+          <CelebrationSymbol theme={theme} size={230} />
           <strong>{number(highest)}</strong>
         </div>
         <h1 id="milestone-celebration-title">{number(highest)} ngày bền bỉ!</h1>

@@ -540,9 +540,7 @@ textarea:disabled {
 }
 .week-area-chart text {
   fill: var(--muted);
-  font:
-    11px 'Segoe UI',
-    sans-serif;
+  font: 13px var(--font-sans);
 }
 .orange-icon {
   color: #ec981f;
@@ -1790,5 +1788,294 @@ html[data-theme='dark'] .demo-banner select {
   }
   .header-inner {
     column-gap: 8px;
+  }
+}
+/* Readability: native UI font, comfortable copy and metadata at laptop distance. */
+:root {
+  --type-note: 13px;
+  --type-small: 14px;
+  --type-body: 16px;
+}
+body,
+input,
+textarea,
+select {
+  font-size: var(--type-body);
+}
+.button {
+  font-size: 16px;
+}
+.button.small,
+.button.secondary.small {
+  font-size: 14px;
+}
+.muted,
+small,
+.page-intro {
+  font-size: 14px;
+}
+label,
+.field-label {
+  font-size: 16px;
+}
+h1 {
+  font-size: 32px;
+}
+h2 {
+  font-size: 23px;
+}
+h3,
+h4 {
+  font-size: 17px;
+}
+.brand {
+  font-size: 23px;
+}
+.app-header nav button {
+  font-size: 16px;
+}
+.role-pill {
+  font-size: 13px;
+}
+.dashboard-heading h1 {
+  font-size: 32px;
+}
+.dashboard-heading .eyebrow,
+.eyebrow {
+  font-size: 13px;
+  letter-spacing: 1.2px;
+}
+.habit-kpi > div > span {
+  font-size: 15px;
+}
+.habit-kpi strong {
+  font-size: 34px;
+}
+.habit-kpi strong small {
+  font-size: 16px;
+}
+.habit-kpi > div > small,
+.kpi-link {
+  font-size: 13px;
+}
+.habit-kpi {
+  min-height: 160px;
+  padding-bottom: 32px;
+}
+.board-toolbar h2 {
+  font-size: 22px;
+}
+.board-toolbar p,
+.week-navigation > span {
+  font-size: 14px;
+}
+.week-navigation > span {
+  min-width: 128px;
+}
+.habit-week-table thead th {
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+.habit-week-table thead th > span {
+  font-size: 15px;
+}
+.habit-week-table thead th small {
+  font-size: 13px;
+}
+.board-habit-name > div > span,
+.board-habit-name a {
+  font-size: 16px;
+}
+.board-habit-name small {
+  font-size: 13px;
+}
+.board-legend span,
+.board-footer p {
+  font-size: 13px;
+}
+.habit-streak b {
+  font-size: 17px;
+}
+.dashboard-chart h2 {
+  font-size: 21px;
+}
+.dashboard-chart .muted {
+  font-size: 14px;
+}
+.chart-pill,
+.chart-footnote {
+  font-size: 13px;
+}
+.streak-bar-row {
+  grid-template-columns: 175px minmax(30px, 1fr) 62px;
+}
+.streak-bar-row > span {
+  font-size: 14px;
+  white-space: normal;
+  line-height: 1.4;
+}
+.streak-bar-row > small {
+  font-size: 14px;
+}
+.table-legend,
+.table-legend small,
+.chart-column small {
+  font-size: 13px;
+}
+.weekly-table th,
+.weekly-table td,
+.habit-title h4 {
+  font-size: 16px;
+}
+.habit-meta,
+.habit-tip,
+.checklist-footnote,
+.status-badge {
+  font-size: 14px;
+}
+.board-footer {
+  gap: 14px 24px;
+}
+.message-bubble strong {
+  font-size: 14px;
+}
+.message-bubble small,
+.unread-count,
+.bubble-messages time {
+  font-size: 13px;
+}
+.request-state,
+.small-tag,
+.month-footnote,
+.empty-prizes {
+  font-size: 14px;
+}
+.care-note,
+.custom-wish p {
+  font-size: 14px;
+}
+.league-path small {
+  font-size: 13px;
+}
+.league-player strong {
+  font-size: 16px;
+}
+.league-player small,
+.league-player strong span {
+  font-size: 13px;
+}
+.league-xp {
+  font-size: 16px;
+}
+.league-xp small,
+.league-band-label {
+  font-size: 13px;
+}
+.league-row {
+  min-height: 84px;
+}
+.podium-place > strong {
+  font-size: 16px;
+}
+.podium-place > span:not(.podium-medal):not(.bot-avatar) {
+  font-size: 14px;
+}
+.league-personal h2 {
+  font-size: 21px;
+}
+.league-rules,
+.league-rules .muted {
+  font-size: 15px;
+}
+.league-history span,
+.league-history small {
+  font-size: 14px;
+}
+.league-history strong {
+  font-size: 16px;
+}
+.app-footer {
+  font-size: 14px;
+}
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .header-inner {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 12px 0;
+  }
+  .app-header nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+  .header-actions {
+    margin-left: auto;
+  }
+}
+@media (max-width: 760px) {
+  .brand {
+    font-size: 21px;
+  }
+  .app-header nav button {
+    font-size: 14px;
+  }
+  .dashboard-heading h1 {
+    font-size: 29px;
+  }
+  .board-habit-name > div > span,
+  .board-habit-name a {
+    font-size: 15px;
+  }
+  .board-habit-name small {
+    font-size: 13px;
+  }
+  .habit-week-table .habit-name-col {
+    width: 220px;
+  }
+  .habit-day {
+    width: 44px;
+    height: 44px;
+  }
+  .league-heading h1 {
+    font-size: 28px;
+  }
+}
+@media (max-width: 480px) {
+  .habit-kpi > div > span {
+    font-size: 14px;
+  }
+  .habit-kpi > div > small,
+  .kpi-link {
+    font-size: 13px;
+  }
+  .habit-kpi strong {
+    font-size: 30px;
+  }
+  .habit-kpi strong small {
+    font-size: 14px;
+  }
+  .habit-kpi {
+    min-height: 188px;
+    padding: 18px 14px 40px;
+  }
+  .dashboard-heading .button {
+    font-size: 16px;
+  }
+  .dashboard-chart h2 {
+    font-size: 19px;
+  }
+  .streak-bar-row {
+    grid-template-columns: 142px minmax(20px, 1fr) 48px;
+    gap: 8px;
+  }
+  .streak-bar-row > span,
+  .streak-bar-row > small {
+    font-size: 14px;
+  }
+  .dashboard-chart .card-topline {
+    flex-wrap: wrap;
+  }
+  .league-player strong {
+    font-size: 15px;
   }
 }

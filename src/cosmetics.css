@@ -67,6 +67,11 @@
   overflow: visible;
   filter: drop-shadow(0 2px 2px #0f172a20);
 }
+.cosmetic-frame-raster {
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
 .cosmetic-tier-4,
 .cosmetic-tier-5 {
   filter: drop-shadow(0 0 5px color-mix(in srgb, var(--cosmetic-a) 55%, transparent));
@@ -149,7 +154,7 @@
   border-radius: 7px;
   color: var(--ink);
   background: color-mix(in srgb, var(--title-color) 13%, var(--surface));
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
   text-align: center;
   line-height: 1.4;
@@ -235,7 +240,7 @@
 }
 .cosmetic-item-emblem-title {
   flex-direction: column;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 750;
   padding: 14px;
   text-align: center;
@@ -306,7 +311,7 @@
   border: 1px solid var(--line);
   padding: 14px;
   border-radius: 12px;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--muted);
 }
 .avatar-studio-preview {
@@ -324,7 +329,7 @@
 }
 .avatar-studio-preview > span {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
   margin-top: 4px;
 }
 .avatar-studio-buttons {
@@ -339,10 +344,25 @@
   gap: 7px;
   margin-top: 14px;
   color: var(--success);
-  font-size: 13px;
+  font-size: 14px;
 }
 .avatar-file-selected span {
   overflow-wrap: anywhere;
+}
+.avatar-studio-dialog .cosmetic-muted {
+  font-size: 15px;
+}
+.celebration-symbol {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+.celebration-symbol > svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 .streak-flame {
   display: inline-flex;
@@ -408,7 +428,7 @@
 .shop-wallet small {
   display: block;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   margin-top: 3px;
 }
 .shop-profile-card {
@@ -435,7 +455,7 @@
   flex-wrap: wrap;
   gap: 10px 18px;
   margin: 16px 0;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--muted);
 }
 .shop-profile-stats > span {
@@ -447,7 +467,7 @@
   color: var(--ink);
 }
 .shop-profile-equipment {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   line-height: 1.6;
   max-width: 620px;
@@ -460,6 +480,7 @@
 }
 .shop-profile-edit small {
   color: var(--muted);
+  font-size: 14px;
   max-width: 170px;
   text-align: right;
 }
@@ -491,6 +512,7 @@
   justify-content: center;
   gap: 7px;
   font-weight: 650;
+  font-size: 15px;
   white-space: nowrap;
 }
 .shop-tab[aria-pressed='true'] {
@@ -506,7 +528,7 @@
   white-space: nowrap;
   color: var(--ink);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 15px;
 }
 .shop-owned-toggle input {
   margin: 0;
@@ -544,7 +566,7 @@
   outline: none;
 }
 .shop-search-row > span {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
 }
 .shop-items-grid {
@@ -625,7 +647,7 @@
   width: 70px;
   transform: rotate(22deg);
 }
-.shop-card-standalone-art > .streak-flame {
+.shop-card-standalone-art > .celebration-symbol {
   filter: drop-shadow(0 0 15px color-mix(in srgb, var(--item-color) 35%, transparent));
 }
 .shop-item-card:hover .cosmetic-pet-art {
@@ -640,7 +662,7 @@
   background: var(--surface);
   border-radius: 6px;
   padding: 3px 7px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
   letter-spacing: 0.4px;
   z-index: 5;
@@ -658,15 +680,15 @@
   padding: 16px;
 }
 .shop-item-content > strong {
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.4;
 }
 .shop-item-description {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.55;
   margin: 6px 0 13px;
-  min-height: 38px;
+  min-height: 44px;
 }
 .shop-item-gates {
   display: flex;
@@ -677,7 +699,7 @@
   margin-bottom: 12px;
 }
 .shop-item-gates > span {
-  font-size: 10px;
+  font-size: 12px;
   padding: 3px 7px;
   border-radius: 5px;
   background: var(--bg);
@@ -697,7 +719,7 @@
   gap: 8px;
   padding-top: 12px;
   border-top: 1px solid var(--line);
-  font-size: 12px;
+  font-size: 14px;
 }
 .shop-item-price {
   display: inline-flex;
@@ -733,7 +755,7 @@
   align-items: flex-start;
   gap: 9px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   padding: 18px 0 4px;
   line-height: 1.6;
 }
@@ -777,7 +799,7 @@
 }
 .shop-preview-copy p {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
 }
 .shop-preview-price {
   flex-shrink: 0;
@@ -801,7 +823,7 @@
   grid-template-columns: 18px minmax(0, 1fr) auto;
   gap: 8px;
   align-items: center;
-  font-size: 12px;
+  font-size: 14px;
 }
 .shop-requirement > svg {
   color: var(--muted);
@@ -825,14 +847,14 @@
   margin-bottom: 7px;
 }
 .shop-confirmation p {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--muted);
 }
 .shop-equipment-note {
   display: flex;
   gap: 7px;
   align-items: flex-start;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--success);
   padding: 12px 0 0;
 }
@@ -844,7 +866,13 @@
   place-items: center;
   overflow: hidden;
   padding: 24px;
-  background: radial-gradient(ellipse at 50% 45%, #312e8155, transparent 70%), #080b20f7;
+  background:
+    radial-gradient(
+      ellipse at 50% 45%,
+      color-mix(in srgb, var(--celebration-a) 25%, transparent),
+      transparent 70%
+    ),
+    #080b20f7;
   backdrop-filter: blur(10px);
   color: white;
   animation: celebration-enter 0.35s ease-out both;
@@ -866,8 +894,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #fde68a;
-  font-size: 13px;
+  color: var(--celebration-c);
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 2px;
 }
@@ -891,7 +919,13 @@
   font-weight: 900;
   color: white;
   letter-spacing: -4px;
-  text-shadow: 0 3px 14px #9a3412aa;
+  text-shadow:
+    0 3px 14px var(--celebration-b),
+    0 1px 6px #000a;
+}
+.milestone-celebration .celebration-symbol > svg {
+  transform-origin: center;
+  animation: celebration-symbol-glow 1.8s ease-in-out infinite alternate;
 }
 .celebration-content > h1 {
   font-size: clamp(30px, 5vw, 48px);
@@ -913,7 +947,7 @@
 }
 .celebration-achievements > span {
   padding: 7px 10px;
-  font-size: 12px;
+  font-size: 14px;
   background: #ffffff0d;
   border: 1px solid #ffffff26;
   border-radius: 8px;
@@ -923,7 +957,7 @@
   gap: 5px;
 }
 .celebration-achievements svg {
-  color: #a7f3d0;
+  color: var(--celebration-c);
 }
 .celebration-continue {
   min-height: 48px;
@@ -934,10 +968,10 @@
   padding: 12px 25px;
   border: 1px solid #ffffff40;
   background: white;
-  color: #3730a3;
+  color: var(--celebration-b);
   border-radius: 14px;
   font-weight: 800;
-  box-shadow: 0 4px 0 #a5b4fc;
+  box-shadow: 0 4px 0 var(--celebration-c);
 }
 .celebration-stars,
 .celebration-fireworks {
@@ -958,7 +992,7 @@
   animation: celebration-particle var(--duration) var(--delay) ease-in-out infinite;
 }
 .celebration-stars > i:nth-child(3n) {
-  background: #fde68a;
+  background: var(--celebration-a);
 }
 .celebration-stars > i:nth-child(4n) {
   border-radius: 1px;
@@ -984,15 +1018,17 @@
   box-shadow: 0 0 8px var(--celebration-c);
 }
 .celebration-firework > i:nth-child(2n) {
-  background: #fef08a;
+  background: var(--celebration-c);
 }
 .celebration-theme-football .celebration-stars > i {
-  border: 1px solid #064e3b;
-  background: #a7f3d0;
+  clip-path: polygon(55% 0, 15% 55%, 48% 55%, 35% 100%, 90% 35%, 58% 35%);
+  width: 13px;
+  height: 18px;
 }
 .celebration-theme-builder .celebration-stars > i,
 .celebration-theme-builder .celebration-firework > i {
   border-radius: 0;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
 }
 .celebration-theme-manga .celebration-stars > i {
   clip-path: polygon(50% 0, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0 50%, 35% 35%);
@@ -1000,12 +1036,27 @@
   height: 12px;
 }
 .celebration-theme-detective .celebration-firework > i {
-  width: 3px;
-  height: 14px;
-  border-radius: 2px;
+  width: 9px;
+  height: 12px;
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 35%, 50% 100%, 0 35%);
 }
 .celebration-theme-space .celebration-stars > i {
-  box-shadow: 0 0 18px #c4b5fd;
+  box-shadow: 0 0 18px var(--celebration-a);
+  width: 12px;
+  height: 12px;
+  clip-path: polygon(
+    50% 0,
+    62% 35%,
+    100% 38%,
+    72% 62%,
+    82% 100%,
+    50% 78%,
+    18% 100%,
+    28% 62%,
+    0 38%,
+    38% 35%
+  );
 }
 @keyframes cosmetic-fire {
   from {
@@ -1085,6 +1136,16 @@
   to {
     transform: scale(1);
     opacity: 1;
+  }
+}
+@keyframes celebration-symbol-glow {
+  from {
+    transform: scale(0.97) rotate(-2deg);
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--celebration-a) 45%, transparent));
+  }
+  to {
+    transform: scale(1.03) rotate(2deg);
+    filter: drop-shadow(0 0 16px color-mix(in srgb, var(--celebration-a) 80%, transparent));
   }
 }
 @keyframes celebration-particle {
@@ -1167,7 +1228,7 @@
     font-size: 19px;
   }
   .shop-wallet small {
-    font-size: 10px;
+    font-size: 13px;
   }
   .shop-profile-card {
     display: flex;
@@ -1192,7 +1253,7 @@
   }
   .shop-tab {
     padding: 9px 5px;
-    font-size: 12px;
+    font-size: 14px;
     gap: 5px;
   }
   .shop-tab > svg {
@@ -1213,11 +1274,11 @@
     padding: 12px;
   }
   .shop-item-content > strong {
-    font-size: 13px;
+    font-size: 16px;
   }
   .shop-item-description {
-    font-size: 11px;
-    min-height: 51px;
+    font-size: 14px;
+    min-height: 66px;
   }
   .shop-item-footer {
     align-items: flex-start;
@@ -1262,7 +1323,7 @@
     font-size: 14px;
   }
   .celebration-eyebrow {
-    font-size: 11px;
+    font-size: 13px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -1,5 +1,12 @@
 # Frontend và tài nguyên
 
+## Cập nhật dễ đọc và nhận diện hạng (14/10/2026)
+
+- System font stack `ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Ubuntu, Noto Sans…` áp dụng cả biểu đồ. Chữ chính 16px, phụ 13–14px; Shop và các nhãn hạng được tăng tương ứng.
+- Mười hạng có SVG riêng về hình dáng và chất liệu đồng/bạc/vàng/đá quý. Hạng phía trước vẫn có màu; hạng hiện tại được viền bằng màu của chính huy hiệu. Thanh hạng cuộn trong vùng riêng trên màn hẹp.
+- Sáu kiểu mừng dùng sáu hình khác nhau và sáu bảng màu: lửa cam, chớp vàng, kim cương cyan, vương miện tím, pha lê lục bảo, sao băng hồng. Thumbnail tĩnh; hiệu ứng toàn màn hình dùng đúng hình đã chọn.
+- [Khung Premium](PREMIUM_FRAME.md) là PNG trong suốt được tạo bằng built-in imagegen từ ảnh tham chiếu. Giá 4.000 Coin và streak 40 ngày được kiểm tra trên server. Nhóm vũ khí riêng bị bỏ; dữ liệu sở hữu cũ được giữ để bảo toàn lịch sử, nhưng không hiển thị hoặc cho mua/trang bị thêm.
+
 ## ConanHabit (14/10/2026)
 
 Thiết kế hiện tại dùng màu và bố cục từ bản TSX tham chiếu của người dùng: bốn thẻ tổng quan, bảng tuần đầy đủ bảy việc và hai biểu đồ phía dưới. `conanhabit.css` bổ sung theme sáng/tối trên token của evondevKit; lịch sử và phân quyền tiếp tục dùng các component có sẵn. Các URL lấy từ lịch đã có hiệu lực ở ngày đang xem.

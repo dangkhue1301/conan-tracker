@@ -2,7 +2,15 @@
 import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { AvatarStudio, CosmeticDialog, MilestoneCelebration } from '../src/cosmetics'
+import {
+  AvatarStudio,
+  CosmeticDialog,
+  MilestoneCelebration,
+  CosmeticArt,
+  ProfileAvatar,
+  CELEBRATION_STYLES,
+} from '../src/cosmetics'
+import { SHOP_ITEMS } from '../src/shop-catalog'
 import { defaultHabits } from '../src/defaults'
 import { addDays } from '../src/domain'
 import { emptyGameState, gameStats } from '../src/gamification'
@@ -75,6 +83,19 @@ function ShopHarness({ initial, repo }: { initial: Snapshot; repo: DemoRepositor
 }
 
 describe('Shop integration with persisted Coin and XP', () => {
+  it('removes the weapons category and hides legacy weapons on the profile', () => {
+    const data = fixture(),
+      repo = new DemoRepository('learner')
+    data.game!.inventory.push('weapon-fire-1')
+    data.game!.equipped.weapon = 'weapon-fire-1'
+    render(<ShopHarness initial={data} repo={repo} />)
+    expect(screen.queryByRole('button', { name: 'Kiếm & vũ khí' })).toBeNull()
+    expect(document.querySelector('.profile-cosmetic-weapon')).toBeNull()
+    expect(
+      screen.getByRole('button', { name: 'Khung Premium, 4.000 Conan Coin' }).textContent,
+    ).toContain('40 ngày')
+    expect(data.game!.inventory).toContain('weapon-fire-1')
+  })
   it('requires confirmation, purchases once, preserves XP, then equips and removes an owned frame', async () => {
     const data = fixture(),
       repo = new DemoRepository('learner', localStorage, () => DATE)
@@ -204,6 +225,53 @@ describe('uploaded avatars', () => {
 })
 
 describe('accessible overlay lifecycle', () => {
+  it('shows six distinct celebration symbols and uses the selected symbol fullscreen', () => {
+    const styles = SHOP_ITEMS.filter((item) => item.category === 'celebration')
+    const { unmount } = render(
+      <>
+        {styles.map((item) => (
+          <CosmeticArt key={item.id} item={item} />
+        ))}
+      </>,
+    )
+    for (const name of [
+      'Lửa cam',
+      'Tia chớp vàng',
+      'Kim cương xanh ngọc',
+      'Vương miện tím',
+      'Khiên pha lê lục bảo',
+      'Sao băng hồng',
+    ])
+      expect(screen.getByRole('img', { name })).toBeTruthy()
+    expect(new Set(styles.map((item) => CELEBRATION_STYLES[item.theme].colors[0])).size).toBe(6)
+    unmount()
+    render(
+      <MilestoneCelebration
+        milestones={[{ key: 'global:30', label: 'Chuỗi thói quen', count: 30 }]}
+        styleId="celebration-manga"
+        onClose={() => {}}
+      />,
+    )
+    expect(
+      within(screen.getByRole('dialog')).getByRole('img', { name: 'Vương miện tím' }),
+    ).toBeTruthy()
+  })
+  it('previews the transparent reference frame and safely switches between it and SVG frames', () => {
+    const data = fixture(),
+      repo = new DemoRepository('learner')
+    const view = render(
+      <ProfileAvatar data={data} repo={repo} preview={{ frame: 'frame-mist-swordsman' }} />,
+    )
+    const frame = document.querySelector<HTMLImageElement>('.cosmetic-frame-raster')!
+    expect(frame.getAttribute('src')).toContain('cosmetics/mist-swordsman-frame.png')
+    expect(document.querySelector('.profile-cosmetic-picture')).toBeTruthy()
+    view.rerender(<ProfileAvatar data={data} repo={repo} preview={{ frame: 'frame-flame-1' }} />)
+    expect(document.querySelector('.cosmetic-frame-raster')).toBeNull()
+    view.rerender(
+      <ProfileAvatar data={data} repo={repo} preview={{ frame: 'frame-mist-swordsman' }} />,
+    )
+    expect(document.querySelector('.cosmetic-frame-raster')).toBeTruthy()
+  })
   it('keeps the flame-themed celebration fixed over the viewport instead of inheriting the icon geometry', () => {
     const stylesheet = document.createElement('style')
     stylesheet.textContent = readFileSync('src/cosmetics.css', 'utf8')

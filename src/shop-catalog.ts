@@ -1,12 +1,11 @@
 import type { CosmeticCategory, ShopItem } from './gamification-types'
 
-export const CATEGORY_LABELS: Record<CosmeticCategory, string> = {
+export const CATEGORY_LABELS: Record<Exclude<CosmeticCategory, 'weapon'>, string> = {
   frame: 'Khung avatar',
   banner: 'Ảnh bìa',
   title: 'Danh hiệu',
   celebration: 'Hiệu ứng ăn mừng',
   pet: 'Bạn đồng hành',
-  weapon: 'Kiếm & vũ khí',
 }
 
 const themes = [
@@ -35,6 +34,18 @@ const starter: ShopItem = {
 
 export const SHOP_ITEMS: ShopItem[] = [
   starter,
+  {
+    id: 'frame-mist-swordsman',
+    name: 'Khung Premium',
+    description:
+      'Vòng kiếm bạc, mây và lửa ngọc bích, cùng kiếm sĩ nhỏ ở chân khung. Thiết kế theo ảnh em yêu thích.',
+    category: 'frame',
+    theme: 'mist',
+    tier: 3,
+    price: 4000,
+    streakRequired: 40,
+    extraRequired: 0,
+  },
   ...themes.flatMap(([theme, name]) =>
     framePrices.map((price, tier): ShopItem => ({
       id: `frame-${theme}-${tier + 1}`,
@@ -74,10 +85,24 @@ export const SHOP_ITEMS: ShopItem[] = [
       extraRequired: 0,
     })),
   ),
-  ...themes.map(([theme, name], i): ShopItem => ({
+  ...themes.map(([theme], i): ShopItem => ({
     id: `celebration-${theme}`,
-    name: `${name} bừng sáng`,
-    description: `Pháo hoa và hạt sáng ${name.toLowerCase()} khi em đạt một cột mốc mới.`,
+    name: [
+      'Lửa bền bỉ',
+      'Chớp vàng bứt phá',
+      'Kim cương băng lam',
+      'Vương miện hoàng gia',
+      'Tinh thể lục bảo',
+      'Sao băng hồng ngọc',
+    ][i],
+    description: [
+      'Ngọn lửa cam rực và pháo hoa ấm, mừng từng ngày em bền bỉ.',
+      'Tia chớp vàng điện, những đường sáng sắc nét và pháo hoa bứt phá.',
+      'Kim cương xanh băng nhiều mặt cắt, hạt sáng trong veo và pháo hoa lam.',
+      'Vương miện tím hoàng gia, những tia sáng vinh danh thành tựu của em.',
+      'Tinh thể lục bảo xanh ngọc, hào quang hình học và hạt sáng rực rỡ.',
+      'Sao băng hồng rực với đuôi sáng và những chùm pháo hoa giữa ngân hà.',
+    ][i],
     category: 'celebration',
     theme,
     tier: i < 3 ? 0 : 1,
@@ -106,26 +131,6 @@ export const SHOP_ITEMS: ShopItem[] = [
       extraRequired: 0,
     }
   }),
-  ...[
-    ['fire', 'Hỏa kiếm'],
-    ['water', 'Thủy kiếm'],
-    ['lightning', 'Lôi kiếm'],
-    ['ice', 'Băng kiếm'],
-    ['moon', 'Nguyệt kiếm'],
-    ['dragon', 'Long kiếm'],
-  ].flatMap(([theme, name]) =>
-    [400, 2400].map((price, tier): ShopItem => ({
-      id: `weapon-${theme}-${tier + 1}`,
-      name: `${name}${tier ? ' · Thức tỉnh' : ''}`,
-      description: `Thanh kiếm trang trí mang sức mạnh ${name.toLowerCase()}, với hoa văn và sắc sáng riêng.`,
-      category: 'weapon',
-      theme,
-      tier,
-      price,
-      streakRequired: tier ? 30 : 0,
-      extraRequired: 0,
-    })),
-  ),
 ]
 
 const itemsById = new Map(SHOP_ITEMS.map((item) => [item.id, item]))

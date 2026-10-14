@@ -16,7 +16,6 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  Sword,
   Zap,
 } from 'lucide-react'
 import type { Run } from '../App'
@@ -31,6 +30,7 @@ import {
   MilestoneCelebration,
   ProfileAvatar,
   StreakFlame,
+  celebrationStyle,
 } from '../cosmetics'
 import { Button } from '../ui'
 
@@ -40,7 +40,6 @@ const CATEGORY_ICONS = {
   title: Award,
   celebration: PartyPopper,
   pet: PawPrint,
-  weapon: Sword,
 }
 const CATEGORY_COLORS: Record<string, string> = {
   flame: '#fb923c',
@@ -56,7 +55,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   moon: '#c4b5fd',
   dragon: '#f87171',
 }
-const CATEGORIES = Object.keys(CATEGORY_LABELS) as CosmeticCategory[]
+type ShopCategory = Exclude<CosmeticCategory, 'weapon'>
+const CATEGORIES = Object.keys(CATEGORY_LABELS) as ShopCategory[]
 const number = (n: number) => n.toLocaleString('vi-VN')
 
 export default function Shop({
@@ -72,7 +72,7 @@ export default function Shop({
   busy: boolean
   currentDate: string
 }) {
-  const [category, setCategory] = useState<CosmeticCategory>('frame'),
+  const [category, setCategory] = useState<ShopCategory>('frame'),
     [ownedOnly, setOwnedOnly] = useState(false),
     [query, setQuery] = useState('')
   const [selected, setSelected] = useState<ShopItem | null>(null),
@@ -147,7 +147,7 @@ export default function Shop({
             </span>
             <span>
               <Package size={17} />
-              <strong>{game.inventory.length}</strong> món đã sở hữu
+              <strong>{game.inventory.filter((id) => itemById(id)).length}</strong> món đã sở hữu
             </span>
           </div>
           <p className="shop-profile-equipment">
@@ -224,7 +224,12 @@ export default function Shop({
                 <div
                   className="shop-item-art"
                   style={
-                    { '--item-color': CATEGORY_COLORS[item.theme] ?? '#a78bfa' } as CSSProperties
+                    {
+                      '--item-color':
+                        item.category === 'celebration'
+                          ? celebrationStyle(item.theme).colors[0]
+                          : (CATEGORY_COLORS[item.theme] ?? '#a78bfa'),
+                    } as CSSProperties
                   }
                 >
                   <span className={`shop-item-badge ${wearing ? 'equipped' : ''}`}>
@@ -232,11 +237,13 @@ export default function Shop({
                       ? 'ĐANG DÙNG'
                       : has
                         ? 'ĐÃ SỞ HỮU'
-                        : item.tier >= 3
-                          ? 'HUYỀN THOẠI'
-                          : item.tier >= 2
-                            ? 'ĐẶC BIỆT'
-                            : 'BỘ SƯU TẬP'}
+                        : item.id === 'frame-mist-swordsman'
+                          ? 'PREMIUM'
+                          : item.tier >= 3
+                            ? 'HUYỀN THOẠI'
+                            : item.tier >= 2
+                              ? 'ĐẶC BIỆT'
+                              : 'BỘ SƯU TẬP'}
                   </span>
                   {['frame', 'banner', 'title'].includes(item.category) ? (
                     <ProfileAvatar

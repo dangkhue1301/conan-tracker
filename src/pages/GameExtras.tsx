@@ -26,6 +26,7 @@ import {
 import { Button, Modal } from '../ui'
 import { FrameArtwork, ProfileAvatar } from '../cosmetics'
 import { itemById } from '../shop-catalog'
+import { LeagueBadge, leagueRankStyle } from '../rank-badges'
 
 const regionNames = new Intl.DisplayNames(['vi'], { type: 'region' })
 const countryLabel = (code: string) =>
@@ -509,27 +510,32 @@ export function League({ data, repo, run, busy, currentDate }: Props) {
   return (
     <div className="league-page">
       <div className="league-heading">
-        <div>
-          <p className="eyebrow">CÙNG CỐ GẮNG THÊM MỘT CHÚT</p>
-          <h1>Giải đấu {LEAGUES[tier]}</h1>
-          <p className="muted">
-            Tuần {shortDate(weekStart(currentDate))} –{' '}
-            {shortDate(addDays(weekStart(currentDate), 6))} · giờ Việt Nam
-          </p>
+        <div className="league-title-with-badge">
+          <LeagueBadge tier={tier} size={76} decorative />
+          <div>
+            <p className="eyebrow">CÙNG CỐ GẮNG THÊM MỘT CHÚT</p>
+            <h1>Giải đấu {LEAGUES[tier]}</h1>
+            <p className="muted">
+              Tuần {shortDate(weekStart(currentDate))} –{' '}
+              {shortDate(addDays(weekStart(currentDate), 6))} · giờ Việt Nam
+            </p>
+          </div>
         </div>
         <Button className="secondary" onClick={() => setInfo(true)}>
           Thông tin giải
         </Button>
       </div>
-      <div className="league-path" aria-label="Các hạng giải">
+      <div className="league-path league-ranks" aria-label="Các hạng giải">
         {LEAGUES.map((name, i) => (
           <div
             key={name}
-            className={`${i === tier ? 'current' : ''} ${i < tier ? 'passed' : ''}`}
-            title={name}
+            className={`league-rank ${i === tier ? 'current' : ''} ${i < tier ? 'passed' : ''}`}
+            style={leagueRankStyle(i)}
+            title={`${name}${i === tier ? ' · Hạng hiện tại' : i < tier ? ' · Đã vượt qua' : ' · Hạng phía trước'}`}
+            aria-current={i === tier ? 'step' : undefined}
           >
             <span>
-              <ShieldCheck size={i === tier ? 25 : 19} />
+              <LeagueBadge tier={i} decorative />
             </span>
             <small>{name}</small>
           </div>
@@ -644,7 +650,8 @@ export function League({ data, repo, run, busy, currentDate }: Props) {
                 .slice(0, 5)
                 .map((h) => (
                   <div key={h.week}>
-                    <span>
+                    <span className="league-history-name">
+                      <LeagueBadge tier={h.tier} size={30} decorative />
                       {shortDate(h.week)} · {LEAGUES[h.tier]}
                     </span>
                     <strong>

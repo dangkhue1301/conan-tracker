@@ -313,18 +313,24 @@ describe('permanent milestones and catalog', () => {
     expect(streakMilestones(data, addDays(date, 10))).toEqual([])
   })
 
-  it('ships 78 unique purchases plus one free frame, with all six cosmetic types and high-tier gates', () => {
-    expect(SHOP_ITEMS).toHaveLength(79)
-    expect(new Set(SHOP_ITEMS.map((item) => item.id)).size).toBe(79)
-    expect(SHOP_ITEMS.filter((item) => item.price > 0)).toHaveLength(78)
-    expect(Object.keys(CATEGORY_LABELS)).toHaveLength(6)
-    expect(SHOP_ITEMS.filter((item) => item.category === 'frame')).toHaveLength(31)
+  it('ships 67 unique purchases plus one free frame in five active categories', () => {
+    expect(SHOP_ITEMS).toHaveLength(68)
+    expect(new Set(SHOP_ITEMS.map((item) => item.id)).size).toBe(68)
+    expect(SHOP_ITEMS.filter((item) => item.price > 0)).toHaveLength(67)
+    expect(Object.keys(CATEGORY_LABELS)).toHaveLength(5)
+    expect(SHOP_ITEMS.filter((item) => item.category === 'frame')).toHaveLength(32)
+    expect(itemById('frame-mist-swordsman')).toMatchObject({
+      price: 4000,
+      streakRequired: 40,
+      theme: 'mist',
+    })
     expect(itemById('frame-flame-5')).toMatchObject({
       price: 8500,
       streakRequired: 100,
       extraRequired: 50,
     })
     expect(itemById('frame-starter')).toMatchObject({ price: 0 })
+    expect(itemById('weapon-fire-1')).toBeUndefined()
     expect(itemById(undefined)).toBeUndefined()
     expect(itemById('unknown')).toBeUndefined()
   })
