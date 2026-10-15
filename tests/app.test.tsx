@@ -14,7 +14,7 @@ beforeEach(() => {
   localStorage.setItem('conan-tracker-demo-v1', JSON.stringify(demoSnapshot('learner', date)))
   // Celebration behavior has its own tests. These flows start with prior milestones read.
   const seenMilestones = ['global', ...HABIT_IDS].flatMap((id) =>
-    [7, 10, 30, 60, 100, 180, 365].map((count) => `${id}:${count}`),
+    [7, 10, 30, 60, 90, 120, 180, 365].map((count) => `${id}:${count}`),
   )
   for (const role of ['learner', 'mentor', 'parent'])
     localStorage.setItem(

@@ -1,5 +1,13 @@
 # Kiểm tra và giới hạn bàn giao
 
+## Dark mode, reset Shop và quà streak (15/10/2026)
+
+- Form lời nhắn dùng nền theo theme; đường kẻ bảng tuần dùng màu viền theo theme. Edge kiểm tra sáng/tối ở 1366px và 390px, gồm form trên trang và trong modal: không lỗi JavaScript hoặc tràn trang. Chữ nhãn dark mode đạt tương phản 14,33:1, placeholder 7,40:1.
+- Conan bắt đầu lại với đúng 200 Coin. Đã xóa các món mua trước đó khỏi inventory và bỏ trang bị; giữ khung mặc định đã ẩn. Ba lượt ghi nhận có sẵn trong ngày reset được lưu làm baseline nên không cộng lại Coin. Việc mới và phần nâng mức trong ngày vẫn có Coin, ngày sau tính bình thường; sửa dữ liệu trước reset không tính lại Coin của ngày cũ.
+- Quà streak chung: 7/10 ngày +100; 30/60/90 ngày +150; 120/180/365 ngày +300; từ 400 ngày, mỗi mốc 100 ngày +300. Mỗi mốc tính một lần theo kỷ lục, không nhân theo từng việc hoặc tài khoản, không tăng XP, không phụ thuộc việc mở/đóng màn ăn mừng.
+- 162/162 kiểm thử trên 9 file đạt, format/TypeScript/build đạt. PostgreSQL kiểm tra reset chạy lại không xóa món mua mới, mua dùng đúng số dư đã có thưởng streak và phép tính server khớp frontend ở cả 10 mốc thưởng tới 500 ngày. Kiểm tra trình duyệt xác nhận ví 200 và 0 món đã mua vẫn giữ sau reload trên demo.
+- Migration `20261015001747_reset_coin_wallet_and_streak_rewards.sql` đã áp dụng trên Supabase. Truy vấn xác nhận ví 200, Coin mới kiếm 0, Coin đã tiêu 0, XP 60; hash toàn bộ check-in, lịch và hồ sơ trước/sau khớp. Các dữ liệu game khác giữ nguyên. Helper mới ở schema riêng, client không có quyền truy cập; anon không được gọi thao tác mua. Advisor không phát sinh cảnh báo mới.
+
 ## Đã kiểm tra trên máy
 
 - `npm test`: 60 bài kiểm tra trong 5 file. Phần giao diện chạy trong DOM cục bộ (JSDOM), phần cơ sở dữ liệu chạy migration thật trên PostgreSQL cục bộ qua PGlite. Có kiểm tra quyền của helper RLS tự động do Dashboard tạo.

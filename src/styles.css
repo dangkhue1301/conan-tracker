@@ -790,7 +790,7 @@ summary::-webkit-details-marker {
 }
 .weekly-table tbody td,
 .weekly-table tbody th {
-  border-bottom: 1px solid #f0f3f4;
+  border-bottom: 1px solid var(--line);
 }
 .weekly-table tbody tr:last-child td,
 .weekly-table tbody tr:last-child th {
@@ -1192,7 +1192,7 @@ summary::-webkit-details-marker {
   margin-bottom: 24px;
 }
 .message-composer {
-  background: #f8fafb;
+  background: var(--surface-soft);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 18px;

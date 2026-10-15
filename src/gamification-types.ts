@@ -1,3 +1,5 @@
+import type { HabitId } from './types'
+
 export type CosmeticCategory = 'frame' | 'banner' | 'title' | 'celebration' | 'pet' | 'weapon'
 export interface ShopItem {
   id: string
@@ -50,6 +52,13 @@ export interface GameState {
   inventory: string[]
   equipped: Partial<Record<CosmeticCategory, string>>
   spentCoins: number
+  coinWallet: {
+    openingCoins: number
+    startedOn: string | null
+    baselineByHabit: Partial<Record<HabitId, number>>
+    dayBonusBaseline: number
+    streakBaseline: number
+  }
   repairs: StreakRepair[]
   prizeCatalog: MonthlyPrize[]
   prizeRequests: PrizeRequest[]

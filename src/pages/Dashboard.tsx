@@ -535,7 +535,11 @@ export default function Dashboard({
               <b>Streak chung</b> tăng khi em thực hiện tất cả việc áp dụng trong ngày. Mỗi việc
               cũng có streak riêng. Ngày nghỉ được duyệt giữ nguyên streak.
             </p>
-            <p>Mốc mới: 7, 10, 30, 60, 100, 180, 365 ngày và mỗi 100 ngày tiếp theo.</p>
+            <p>
+              Em bắt đầu với <b>200 Coin</b>. Quà streak chung tự động cộng một lần mỗi mốc: 7/10
+              ngày +100 Coin; 30/60/90 ngày +150 Coin; 120/180/365 ngày và các mốc 400, 500… ngày
+              +300 Coin. Quà streak không tăng XP.
+            </p>
           </div>
         </Modal>
       )}

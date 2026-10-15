@@ -12,6 +12,29 @@ import type { Checkin, HabitId, Snapshot } from './types'
 
 const HABITS: HabitId[] = ['anki', 'grammar', 'mental', 'review', 'reading', 'writing', 'tidy']
 const POINTS = { not_started: [0, 0], minimum: [5, 10], done: [10, 20], extra: [15, 30] } as const
+export const OPENING_COINS = 200
+
+export function streakThresholds(best: number): number[] {
+  return [
+    7,
+    10,
+    30,
+    60,
+    90,
+    120,
+    180,
+    365,
+    ...Array.from({ length: Math.max(0, Math.floor(best / 100) - 3) }, (_, i) => (i + 4) * 100),
+  ].filter((count) => count <= best)
+}
+
+export function streakCoinReward(count: number): number {
+  if (count === 7 || count === 10) return 100
+  if (count === 30 || count === 60 || count === 90) return 150
+  if (count === 120 || count === 180 || count === 365 || (count >= 400 && count % 100 === 0))
+    return 300
+  return 0
+}
 
 export function emptyGameState(): GameState {
   return {
@@ -19,6 +42,13 @@ export function emptyGameState(): GameState {
     inventory: ['frame-starter'],
     equipped: { frame: 'frame-starter' },
     spentCoins: 0,
+    coinWallet: {
+      openingCoins: OPENING_COINS,
+      startedOn: null,
+      baselineByHabit: {},
+      dayBonusBaseline: 0,
+      streakBaseline: 0,
+    },
     repairs: [],
     prizeCatalog: [],
     prizeRequests: [],
@@ -38,6 +68,11 @@ export function gameState(data: Snapshot): GameState {
     inventory: [...new Set(['frame-starter', ...(saved.inventory ?? [])])],
     equipped: saved.equipped === undefined ? { ...base.equipped } : { ...saved.equipped },
     spentCoins: Number.isFinite(saved.spentCoins) ? Math.max(0, saved.spentCoins) : 0,
+    coinWallet: {
+      ...base.coinWallet,
+      ...saved.coinWallet,
+      baselineByHabit: { ...saved.coinWallet?.baselineByHabit },
+    },
     repairs: saved.repairs ?? [],
     prizeCatalog: saved.prizeCatalog ?? [],
     prizeRequests: saved.prizeRequests ?? [],
@@ -93,6 +128,7 @@ function repairDates(data: Snapshot): Set<string> {
 
 export interface GameStats {
   earnedCoins: number
+  streakCoins: number
   coins: number
   xp: number
   weeklyXp: number
@@ -105,6 +141,7 @@ export interface GameStats {
 export function gameStats(data: Snapshot, currentDate = today()): GameStats {
   const result: GameStats = {
     earnedCoins: 0,
+    streakCoins: 0,
     coins: 0,
     xp: 0,
     weeklyXp: 0,
@@ -117,6 +154,8 @@ export function gameStats(data: Snapshot, currentDate = today()): GameStats {
   }
   const start = historyStart(data)
   if (!start || !isDate(currentDate) || start > currentDate) return result
+  const game = gameState(data)
+  const wallet = game.coinWallet
   const checks = checkinIndex(data)
   const rest = new Set(data.excuses.map((excuse) => excuse.date))
   const repairs = repairDates(data)
@@ -127,12 +166,18 @@ export function gameStats(data: Snapshot, currentDate = today()): GameStats {
     if (!habits.length) continue
     let complete = true
     let dayXp = 0
+    const earnsCoins = !wallet.startedOn || date >= wallet.startedOn
+    const resetDay = date === wallet.startedOn
     for (const habit of habits) {
       const status = checks.get(`${date}:${habit.id}`)?.status ?? 'not_started'
       const streak = result.perHabit[habit.id]
       if (isCredited(status)) {
         const [coin, xp] = POINTS[status]
-        result.earnedCoins += coin
+        if (earnsCoins)
+          result.earnedCoins += Math.max(
+            0,
+            coin - (resetDay ? (wallet.baselineByHabit[habit.id] ?? 0) : 0),
+          )
         result.xp += xp
         dayXp += xp
         if (status === 'extra') result.extraCount++
@@ -144,7 +189,8 @@ export function gameStats(data: Snapshot, currentDate = today()): GameStats {
       }
     }
     if (complete) {
-      result.earnedCoins += 10
+      if (earnsCoins)
+        result.earnedCoins += Math.max(0, 10 - (resetDay ? wallet.dayBonusBaseline : 0))
       result.xp += 20
       dayXp += 20
       result.currentStreak++
@@ -152,7 +198,11 @@ export function gameStats(data: Snapshot, currentDate = today()): GameStats {
     } else if (date < currentDate && !repairs.has(date)) result.currentStreak = 0
     if (date >= week) result.weeklyXp += dayXp
   }
-  result.coins = Math.max(0, result.earnedCoins - gameState(data).spentCoins)
+  result.streakCoins = streakThresholds(result.bestStreak)
+    .filter((count) => count > wallet.streakBaseline)
+    .reduce((total, count) => total + streakCoinReward(count), 0)
+  result.earnedCoins += result.streakCoins
+  result.coins = Math.max(0, wallet.openingCoins + result.earnedCoins - game.spentCoins)
   return result
 }
 
@@ -226,18 +276,7 @@ export interface StreakMilestone {
 export function streakMilestones(data: Snapshot, currentDate = today()): StreakMilestone[] {
   const stats = gameStats(data, currentDate)
   const seen = new Set(gameState(data).seenMilestones)
-  const thresholds = (best: number) =>
-    [
-      7,
-      10,
-      30,
-      60,
-      100,
-      180,
-      365,
-      ...Array.from({ length: Math.max(0, Math.floor(best / 100) - 3) }, (_, i) => (i + 4) * 100),
-    ].filter((n) => n <= best)
-  const result: StreakMilestone[] = thresholds(stats.bestStreak).map((count) => ({
+  const result: StreakMilestone[] = streakThresholds(stats.bestStreak).map((count) => ({
     key: `global:${count}`,
     label: 'Chuỗi thói quen',
     count,
@@ -247,7 +286,7 @@ export function streakMilestones(data: Snapshot, currentDate = today()): StreakM
       .sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom))
       .flatMap((plan) => plan.habits)
       .find((item) => item.id === id)
-    for (const count of thresholds(stats.perHabit[id].best))
+    for (const count of streakThresholds(stats.perHabit[id].best))
       result.push({
         key: `${id}:${count}`,
         label: habit ? habitTitle(habit) : id,

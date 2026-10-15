@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
 import { readFile, readdir } from 'node:fs/promises'
 import { defaultHabits, defaultProfile } from '../src/defaults'
+import { addDays } from '../src/domain'
 import { gameStats, leagueBotFinalXp, monthlyProgress } from '../src/gamification'
 import { ARCHIVED_AVATAR_FRAMES, SHOP_ITEMS } from '../src/shop-catalog'
 import type { GameAction } from '../src/gamification-types'
@@ -206,7 +207,7 @@ describe('ConanHabit authoritative wallet and catalog', () => {
     ).rejects.toThrow('phù hợp')
   })
   it('checks insufficient funds and streak gates on server, retaining owned inventory after undo', async () => {
-    await expect(action({ type: 'buy', itemId: 'title-flame-1' })).rejects.toThrow('Coin')
+    await expect(action({ type: 'buy', itemId: 'celebration-flame' })).rejects.toThrow('Coin')
     await seedDays('2026-10-01', '2026-10-13', 'extra')
     await action({ type: 'buy', itemId: 'title-flame-2' })
     await expect(action({ type: 'buy', itemId: 'frame-mist-swordsman' })).rejects.toThrow(
@@ -234,10 +235,121 @@ describe('ConanHabit authoritative wallet and catalog', () => {
         'select sum(coins)::integer coins,sum(xp)::integer xp,sum(extras)::integer extras from conan_private.day_stats(app_today())',
       )
     ).rows[0]
-    expect(totals).toEqual({ coins: stats.earnedCoins, xp: stats.xp, extras: stats.extraCount })
+    expect(totals).toEqual({
+      coins: stats.earnedCoins - stats.streakCoins,
+      xp: stats.xp,
+      extras: stats.extraCount,
+    })
+    const wallet = (
+      await db.query<{ earned_coins: number; streak_coins: number; coins: number }>(
+        'select earned_coins::integer,streak_coins::integer,coins::integer from conan_private.coin_totals()',
+      )
+    ).rows[0]
+    expect(wallet).toEqual({
+      earned_coins: stats.earnedCoins,
+      streak_coins: stats.streakCoins,
+      coins: stats.coins,
+    })
     expect(
       (await db.query<{ value: number }>('select conan_private.best_streak() value')).rows[0].value,
     ).toBe(stats.bestStreak)
+  })
+})
+
+describe('reset wallet and streak Coin parity', () => {
+  async function migration() {
+    const name = (await readdir(new URL('../supabase/migrations/', import.meta.url))).find((name) =>
+      name.endsWith('_reset_coin_wallet_and_streak_rewards.sql'),
+    )!
+    return readFile(new URL(`../supabase/migrations/${name}`, import.meta.url), 'utf8')
+  }
+  async function serverCoins() {
+    await db.exec('reset role;')
+    const value = (
+      await db.query<{ value: number }>(
+        'select coins::integer value from conan_private.coin_totals()',
+      )
+    ).rows[0].value
+    await login('mentor')
+    return value
+  }
+
+  it('resets purchases to 200 once, preserves progress and counts only new work', async () => {
+    await seedDays('2026-10-12', '2026-10-13')
+    for (const habit of ['anki', 'grammar', 'mental']) await save(day, habit)
+    await action({ type: 'buy', itemId: 'title-flame-1' })
+    await action({ type: 'buy', itemId: 'banner-flame-1' })
+    await action({ type: 'equip', category: 'title', itemId: 'title-flame-1' })
+    const before = await snapshot()
+    const sql = await migration()
+    await db.exec('reset role;')
+    await db.exec(sql)
+    await login('mentor')
+    const reset = await snapshot()
+    expect(reset.game).toMatchObject({ inventory: ['frame-starter'], equipped: {}, spentCoins: 0 })
+    expect(reset.checkins).toEqual(before.checkins)
+    expect(reset.plans).toEqual(before.plans)
+    expect(reset.profile).toEqual(before.profile)
+    expect(gameStats(reset, day)).toMatchObject({
+      coins: 200,
+      earnedCoins: 0,
+      xp: gameStats(before, day).xp,
+    })
+    expect(await serverCoins()).toBe(200)
+    await save('2026-10-13', 'grammar', 'extra', 1)
+    expect(await serverCoins()).toBe(200)
+    await save(day, 'anki', 'extra', 1)
+    for (const habit of ['review', 'reading', 'writing', 'tidy']) await save(day, habit)
+    expect(gameStats(await snapshot(), day).coins).toBe(255)
+    expect(await serverCoins()).toBe(255)
+    await action({ type: 'buy', itemId: 'title-flame-1' })
+    const bought = await snapshot()
+    expect(gameStats(bought, day).coins).toBe(155)
+    await db.exec('reset role;')
+    await db.exec(sql)
+    await login('mentor')
+    expect((await snapshot()).game).toEqual(bought.game)
+    expect(await serverCoins()).toBe(155)
+    await login('learner')
+    await expect(db.exec('select conan_private.coin_totals()')).rejects.toThrow('permission denied')
+  })
+
+  it.each([
+    [7, 100],
+    [10, 200],
+    [30, 350],
+    [60, 500],
+    [90, 650],
+    [120, 950],
+    [180, 1250],
+    [365, 1550],
+    [400, 1850],
+    [500, 2150],
+  ])('matches client and server gifts at %i days', async (count, bonus) => {
+    const start = addDays(day, 1 - count)
+    await db.exec('reset role;')
+    await db.query("update profiles set data=jsonb_set(data,'{startedOn}',to_jsonb($1::text))", [
+      start,
+    ])
+    await db.query('update plan_versions set effective_from=$1::date', [start])
+    await seedDays(start, day)
+    const stats = gameStats(await snapshot(), day)
+    expect(stats.streakCoins).toBe(bonus)
+    expect(await serverCoins()).toBe(stats.coins)
+    await action({ type: 'seen', keys: [`global:${count}`] })
+    expect(await serverCoins()).toBe(stats.coins)
+  })
+
+  it('uses streak gifts in the authoritative purchase balance', async () => {
+    await seedDays('2026-10-05', '2026-10-14')
+    await db.exec(
+      `reset role; update game_state set data=jsonb_set(data,'{spentCoins}','1050'::jsonb);`,
+    )
+    await login('learner')
+    expect(gameStats(await snapshot(), day)).toMatchObject({ coins: 150, streakCoins: 200 })
+    await action({ type: 'buy', itemId: 'title-flame-1' })
+    expect(gameStats(await snapshot(), day).coins).toBe(50)
+    expect(await serverCoins()).toBe(50)
   })
 })
 

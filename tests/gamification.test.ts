@@ -11,6 +11,7 @@ import {
   LEAGUES,
   monthlyProgress,
   promotionSlots,
+  streakCoinReward,
   streakMilestones,
 } from '../src/gamification'
 import { ARCHIVED_AVATAR_FRAMES, CATEGORY_LABELS, itemById, SHOP_ITEMS } from '../src/shop-catalog'
@@ -73,7 +74,7 @@ describe('separate earning and spending systems', () => {
     data.game.spentCoins = 70
     expect(gameStats(data, '2026-10-03')).toMatchObject({
       earnedCoins: 95,
-      coins: 25,
+      coins: 225,
       xp: 190,
       weeklyXp: 190,
       extraCount: 1,
@@ -93,7 +94,7 @@ describe('separate earning and spending systems', () => {
     )
     expect(gameStats(data, '2026-10-14')).toMatchObject({
       earnedCoins: 35,
-      coins: 35,
+      coins: 235,
       xp: 70,
       weeklyXp: 30,
       extraCount: 0,
@@ -110,7 +111,7 @@ describe('separate earning and spending systems', () => {
   it('rest days do not create points, and an undo offsets future earnings without reducing XP through purchases', () => {
     const data = fixture('2026-10-01', ['anki'])
     credit(data, '2026-10-01')
-    data.game.spentCoins = 20
+    data.game.spentCoins = 220
     expect(gameStats(data, '2026-10-02')).toMatchObject({ coins: 0, xp: 40 })
     data.checkins[0].status = 'not_started'
     credit(data, '2026-10-02', 'minimum')
@@ -129,6 +130,101 @@ describe('separate earning and spending systems', () => {
     expect(gameStats(data, '2026-10-02')).toMatchObject({ earnedCoins: 20, xp: 40 })
     data.checkins.push({ ...data.checkins[1], status: 'not_started', version: 2 })
     expect(gameStats(data, '2026-10-02')).toMatchObject({ earnedCoins: 0, xp: 0 })
+  })
+})
+
+describe('opening Coins, reset baselines and streak gifts', () => {
+  it('starts a fresh wallet with 200 Coins and keeps XP separate', () => {
+    expect(gameStats(fixture(), '2026-10-01')).toMatchObject({ coins: 200, earnedCoins: 0, xp: 0 })
+  })
+
+  it.each([
+    [7, 100, 100],
+    [10, 100, 200],
+    [30, 150, 350],
+    [60, 150, 500],
+    [90, 150, 650],
+    [120, 300, 950],
+    [180, 300, 1250],
+    [365, 300, 1550],
+    [400, 300, 1850],
+    [500, 300, 2150],
+  ])('awards the %i-day gift once for the shared streak', (days, reward, total) => {
+    const data = fixture('2025-01-01', ['anki', 'grammar'])
+    for (let day = 0; day < days; day++) credit(data, addDays('2025-01-01', day))
+    const date = addDays('2025-01-01', days - 1)
+    expect(streakCoinReward(days)).toBe(reward)
+    expect(gameStats(data, date)).toMatchObject({
+      streakCoins: total,
+      coins: 200 + days * 30 + total,
+      xp: days * 60,
+    })
+    data.game.seenMilestones = streakMilestones(data, date).map((milestone) => milestone.key)
+    expect(gameStats(data, date).streakCoins).toBe(total)
+    expect(streakMilestones(data, date)).toEqual([])
+  })
+
+  it('does not repeat gifts when a broken streak is rebuilt, or reward a single habit alone', () => {
+    const data = fixture('2026-10-01', ['anki', 'grammar'])
+    for (let day = 0; day < 7; day++) credit(data, addDays('2026-10-01', day))
+    for (let day = 8; day < 15; day++) credit(data, addDays('2026-10-01', day))
+    expect(gameStats(data, '2026-10-15')).toMatchObject({ bestStreak: 7, streakCoins: 100 })
+    const partial = fixture('2026-10-01', ['anki', 'grammar'])
+    for (let day = 0; day < 10; day++) credit(partial, addDays('2026-10-01', day), 'done', ['anki'])
+    expect(gameStats(partial, '2026-10-10')).toMatchObject({ bestStreak: 0, streakCoins: 0 })
+  })
+
+  it('excludes old work, credits new work and upgrades on the reset day, and reverses new work once', () => {
+    const data = fixture('2026-10-01', ['anki', 'grammar', 'mental'])
+    credit(data, '2026-10-01')
+    credit(data, '2026-10-02', 'done', ['anki'])
+    credit(data, '2026-10-02', 'minimum', ['grammar'])
+    data.game.coinWallet = {
+      openingCoins: 200,
+      startedOn: '2026-10-02',
+      baselineByHabit: { anki: 10, grammar: 5 },
+      dayBonusBaseline: 0,
+      streakBaseline: 1,
+    }
+    const before = gameStats(data, '2026-10-02')
+    expect(before).toMatchObject({ coins: 200, earnedCoins: 0, xp: 110 })
+    data.checkins[0].status = 'extra'
+    expect(gameStats(data, '2026-10-02')).toMatchObject({ coins: 200, xp: 120 })
+    credit(data, '2026-10-02', 'done', ['mental'])
+    expect(gameStats(data, '2026-10-02').coins).toBe(220)
+    data.checkins.find((check) => check.date === '2026-10-02' && check.habitId === 'anki')!.status =
+      'extra'
+    expect(gameStats(data, '2026-10-02').coins).toBe(225)
+    data.checkins.find(
+      (check) => check.date === '2026-10-02' && check.habitId === 'mental',
+    )!.status = 'not_started'
+    expect(gameStats(data, '2026-10-02').coins).toBe(205)
+    credit(data, '2026-10-03')
+    expect(gameStats(data, '2026-10-03').coins).toBe(245)
+    expect(gameStats(JSON.parse(JSON.stringify(data)), '2026-10-03').coins).toBe(245)
+  })
+
+  it('excludes a completed reset day and already reached streak gifts', () => {
+    const data = fixture('2026-10-01', ['anki'])
+    for (let day = 0; day < 7; day++) credit(data, addDays('2026-10-01', day))
+    data.game.coinWallet = {
+      openingCoins: 200,
+      startedOn: '2026-10-07',
+      baselineByHabit: { anki: 10 },
+      dayBonusBaseline: 10,
+      streakBaseline: 7,
+    }
+    expect(gameStats(data, '2026-10-07')).toMatchObject({
+      coins: 200,
+      streakCoins: 0,
+      bestStreak: 7,
+    })
+    for (let day = 7; day < 10; day++) credit(data, addDays('2026-10-01', day))
+    expect(gameStats(data, '2026-10-10')).toMatchObject({
+      coins: 360,
+      streakCoins: 100,
+      bestStreak: 10,
+    })
   })
 })
 
@@ -308,8 +404,8 @@ describe('permanent milestones and catalog', () => {
     const milestones = streakMilestones(data, date)
     expect(
       milestones.filter((milestone) => !milestone.habitId).map((milestone) => milestone.count),
-    ).toEqual([400, 365, 180, 100, 60, 30, 10, 7])
-    expect(milestones).toHaveLength(16)
+    ).toEqual([400, 365, 180, 120, 90, 60, 30, 10, 7])
+    expect(milestones).toHaveLength(18)
     data.game.seenMilestones = milestones.map((milestone) => milestone.key)
     expect(streakMilestones(data, addDays(date, 10))).toEqual([])
   })

@@ -392,6 +392,9 @@ export default function Shop({
         <span>
           Coin dùng để mua đồ. XP dùng để leo hạng và được giữ nguyên khi mua. Vật phẩm đã sở hữu
           luôn ở lại; điều kiện streak được xét theo kỷ lục tốt nhất của em.
+          <br />
+          Quà streak chung: 7/10 ngày +100 Coin; 30/60/90 ngày +150 Coin; 120/180/365 ngày và mỗi
+          mốc 100 ngày từ 400 ngày +300 Coin. Mỗi mốc được cộng tự động một lần.
         </span>
       </p>
       {studio && (
