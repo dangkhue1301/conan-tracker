@@ -125,3 +125,9 @@ Composition: square canvas, centered circular avatar opening at (50%,50%), outer
 Constraints: preserve the supplied Basic illustration, flat colors, line art, face, pose and ornament placement. No redesign, no added glow, sparkles, Premium effects or new objects. Keep only this frame and character. ACTUAL alpha transparency both outside the frame and inside the opening, so an avatar can show through. No Discord UI, no background, no captions or watermark.
 Subject invariants: Mitsuri Kanroji: pastel pink and light green ring with pink hearts and sakura, looping pink flexible sword at the upper right, pink/green cloud and ribbon ornaments, seated happy green-eyed chibi with pink braids and green hair tips, white haori and green socks at the bottom.
 ```
+
+## Kiểm chứng
+
+- 167/167 kiểm thử trên 9 file đạt; format, TypeScript và build đạt. PostgreSQL xác nhận mua tại đúng 14 ngày và trừ 1.800 Coin một lần khi retry; chặn 13 ngày dù đủ Coin và chặn ví chỉ còn 1.799 Coin. Basic và Premium có sở hữu/trang bị riêng, mua không đổi XP.
+- Cả chín PNG RGBA có alpha 0 tại tâm và bốn góc. Edge xác nhận chín tên đúng, nhãn BASIC, ảnh tải đủ; tên không animation, gradient hoặc bóng chữ ở sáng/tối. Preview Mitsuri ở 390px không tràn, hiện giá 1.800 và mốc 14 ngày; xem thử không thay Coin.
+- Migration `20261015002941_add_demon_slayer_basic_frames.sql` đã áp dụng trên Supabase. Truy vấn lại xác nhận chín SKU đều có giá 1.800, streak 14 ngày, extra 0; tổng catalog là 67 món và 31 khung hoạt động.
