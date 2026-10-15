@@ -84,6 +84,54 @@ function ShopHarness({ initial, repo }: { initial: Snapshot; repo: DemoRepositor
 }
 
 describe('Shop integration with persisted Coin and XP', () => {
+  it('shows all nine Basic frames with plain names, the corrected 14-day gate and separate Premium versions', () => {
+    const data = fixture(),
+      repo = new DemoRepository('learner'),
+      action = vi.spyOn(repo, 'gameAction')
+    render(<ShopHarness initial={data} repo={repo} />)
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Tìm vật phẩm' }), {
+      target: { value: 'Basic' },
+    })
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(9)
+    for (const item of SHOP_ITEMS.filter(
+      (entry) => entry.premium === false && entry.collection === 'demon-slayer',
+    )) {
+      const card = screen.getByRole('button', { name: `${item.name}, 1.800 Conan Coin` })
+      expect(within(card).getByText('BASIC')).toBeTruthy()
+      expect(card.querySelector('.cosmetic-premium-name')).toBeNull()
+      expect(
+        card.querySelector('.shop-item-content > strong > span')?.getAttribute('style'),
+      ).toBeNull()
+      expect(card.textContent).toContain('14 ngày')
+      expect(card.querySelector('.cosmetic-frame-raster')?.getAttribute('src')).toContain(
+        item.artwork,
+      )
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Muichiro - Basic, 1.800 Conan Coin' }))
+    const dialog = within(screen.getByRole('dialog'))
+    expect(
+      dialog
+        .getByRole('heading', { name: 'Muichiro - Basic' })
+        .querySelector('.cosmetic-premium-name'),
+    ).toBeNull()
+    expect(dialog.getByText('2 / 14 ngày')).toBeTruthy()
+    expect(dialog.getByText('1.800')).toBeTruthy()
+    expect(
+      screen.getByRole('dialog').querySelector('.cosmetic-frame-raster')?.getAttribute('src'),
+    ).toContain('cosmetics/demon-slayer/basic/muichiro-frame.png')
+    fireEvent.click(dialog.getByText('Đóng', { selector: 'button' }))
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Tìm vật phẩm' }), {
+      target: { value: 'Muichiro' },
+    })
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(2)
+    expect(
+      screen
+        .getByRole('button', { name: 'Muichiro - Premium, 4.000 Conan Coin' })
+        .querySelector('.cosmetic-premium-name'),
+    ).toBeTruthy()
+    expect(action).not.toHaveBeenCalled()
+  })
+
   it('removes the weapons category and hides legacy weapons on the profile', () => {
     const data = fixture(),
       repo = new DemoRepository('learner')
@@ -109,8 +157,10 @@ describe('Shop integration with persisted Coin and XP', () => {
     expect(screen.getByRole('button', { name: 'Khung avatar' }).getAttribute('aria-pressed')).toBe(
       'true',
     )
-    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(14)
-    for (const item of SHOP_ITEMS.filter((entry) => entry.collection === 'demon-slayer')) {
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(23)
+    for (const item of SHOP_ITEMS.filter(
+      (entry) => entry.collection === 'demon-slayer' && entry.premium,
+    )) {
       const card = screen.getByRole('button', { name: `${item.name}, 4.000 Conan Coin` })
       expect(within(card).getByText('PREMIUM')).toBeTruthy()
       expect(card.querySelector('.cosmetic-frame-raster')?.getAttribute('src')).toContain(
@@ -145,7 +195,7 @@ describe('Shop integration with persisted Coin and XP', () => {
     fireEvent.change(screen.getByRole('searchbox', { name: 'Tìm vật phẩm' }), {
       target: { value: 'Demon Slayer' },
     })
-    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(14)
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(23)
     expect(
       screen.getByRole('button', { name: 'Muichiro - Premium, 4.000 Conan Coin' }),
     ).toBeTruthy()
@@ -214,7 +264,7 @@ describe('Shop integration with persisted Coin and XP', () => {
     fireEvent.change(screen.getByRole('searchbox', { name: 'Tìm vật phẩm' }), {
       target: { value: 'Gyomei' },
     })
-    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(1)
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(2)
     fireEvent.click(screen.getByRole('button', { name: 'Gyomei - Premium, 4.000 Conan Coin' }))
     const dialog = within(screen.getByRole('dialog')),
       name = dialog.getByRole('heading', { name: 'Gyomei - Premium' }),
@@ -300,7 +350,7 @@ describe('Shop integration with persisted Coin and XP', () => {
     data.game!.equipped.frame = 'frame-flame-2'
     const saved = structuredClone(data.game)
     render(<ShopHarness initial={data} repo={repo} />)
-    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(22)
+    expect(document.querySelectorAll('.shop-item-card')).toHaveLength(31)
     expect(document.querySelector('svg.cosmetic-frame-art')).toBeNull()
     expect(screen.queryByText('Hành trình bắt đầu')).toBeNull()
     expect(screen.queryByText('Ngọn lửa · Chiến binh')).toBeNull()

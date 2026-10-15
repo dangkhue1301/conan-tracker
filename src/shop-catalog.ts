@@ -1,5 +1,6 @@
 import type { CosmeticCategory, ShopItem } from './gamification-types'
 import { DEMON_SLAYER_FRAMES } from './demon-slayer-frames'
+import { DEMON_SLAYER_BASIC_FRAMES } from './demon-slayer-basic-frames'
 import { BLUE_LOCK_FRAMES } from './blue-lock-frames'
 
 export const CATEGORY_LABELS: Record<Exclude<CosmeticCategory, 'weapon'>, string> = {
@@ -75,6 +76,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     extraRequired: 0,
   },
   ...DEMON_SLAYER_FRAMES,
+  ...DEMON_SLAYER_BASIC_FRAMES,
   ...BLUE_LOCK_FRAMES,
   ...themes.flatMap(([theme, name]) =>
     [150, 900].map((price, tier): ShopItem => ({

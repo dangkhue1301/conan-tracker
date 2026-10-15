@@ -87,6 +87,66 @@ afterAll(async () => {
 })
 
 describe('ConanHabit authoritative wallet and catalog', () => {
+  it.each(['muichiro', 'gyomei'])(
+    'buys Basic %s at exactly 14 days, charges 1800 once and equips it separately',
+    async (slug) => {
+      await seedDays('2026-09-01', '2026-09-14', 'extra')
+      for (const date of ['2026-09-16', '2026-09-18', '2026-09-20', '2026-09-22'])
+        await seedDays(date, date)
+      await login('learner')
+      const before = await snapshot(),
+        itemId = `frame-demon-slayer-basic-${slug}`
+      expect(gameStats(before, day).bestStreak).toBe(14)
+      expect(gameStats(before, day).coins).toBeGreaterThanOrEqual(1800)
+      await action({ type: 'buy', itemId })
+      await action({ type: 'buy', itemId })
+      await action({ type: 'equip', category: 'frame', itemId })
+      const after = await snapshot()
+      expect(after.game!.inventory.filter((id) => id === itemId)).toHaveLength(1)
+      expect(after.game!.inventory).not.toContain(
+        slug === 'muichiro' ? 'frame-mist-swordsman' : 'frame-gyomei',
+      )
+      expect(after.game!.spentCoins - before.game!.spentCoins).toBe(1800)
+      expect(after.game!.equipped.frame).toBe(itemId)
+      expect(gameStats(after, day).coins).toBe(gameStats(before, day).coins - 1800)
+      expect(gameStats(after, day).xp).toBe(gameStats(before, day).xp)
+    },
+  )
+
+  it('rejects Basic at 13 days even with 1800 Coin', async () => {
+    await seedDays('2026-09-01', '2026-09-13', 'extra')
+    for (const date of ['2026-09-16', '2026-09-18', '2026-09-20', '2026-09-22'])
+      await seedDays(date, date)
+    await login('learner')
+    const before = await snapshot()
+    expect(gameStats(before, day).bestStreak).toBe(13)
+    expect(gameStats(before, day).coins).toBeGreaterThanOrEqual(1800)
+    await expect(
+      action({ type: 'buy', itemId: 'frame-demon-slayer-basic-mitsuri' }),
+    ).rejects.toThrow('chưa đủ điều kiện')
+    expect((await snapshot()).game).toEqual(before.game)
+  })
+
+  it('rejects Basic at 14 days when the wallet has only 1799 Coin', async () => {
+    await seedDays('2026-09-01', '2026-09-14', 'extra')
+    for (const date of ['2026-09-16', '2026-09-18', '2026-09-20', '2026-09-22'])
+      await seedDays(date, date)
+    const data = await snapshot(),
+      spent = gameStats(data, day).coins - 1799
+    await db.exec('reset role;')
+    await db.query(
+      "update game_state set data=jsonb_set(data,'{spentCoins}',to_jsonb($1::integer))",
+      [spent],
+    )
+    await login('learner')
+    const before = await snapshot()
+    expect(gameStats(before, day)).toMatchObject({ bestStreak: 14, coins: 1799 })
+    await expect(
+      action({ type: 'buy', itemId: 'frame-demon-slayer-basic-muichiro' }),
+    ).rejects.toThrow('chưa đủ')
+    expect((await snapshot()).game).toEqual(before.game)
+  })
+
   it.each([
     'frame-mist-swordsman',
     'frame-gyomei',

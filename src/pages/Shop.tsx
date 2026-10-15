@@ -289,11 +289,13 @@ export default function Shop({
                         ? 'ĐÃ SỞ HỮU'
                         : item.premium
                           ? 'PREMIUM'
-                          : item.tier >= 3
-                            ? 'HUYỀN THOẠI'
-                            : item.tier >= 2
-                              ? 'ĐẶC BIỆT'
-                              : 'BỘ SƯU TẬP'}
+                          : item.collection && item.premium === false
+                            ? 'BASIC'
+                            : item.tier >= 3
+                              ? 'HUYỀN THOẠI'
+                              : item.tier >= 2
+                                ? 'ĐẶC BIỆT'
+                                : 'BỘ SƯU TẬP'}
                   </span>
                   {['frame', 'banner', 'title'].includes(item.category) ? (
                     <ProfileAvatar
